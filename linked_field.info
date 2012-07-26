@@ -1,8 +1,7 @@
-name = Linked field formatter
-description = @TODO: Write a description.
+name = Linked Field
+description = Adds the functionality to link fields to a specific destination.
 core = 7.x
-package = LOOM
-php = 5.2.4
 
 dependencies[] = field_formatter_settings
 dependencies[] = token
+
