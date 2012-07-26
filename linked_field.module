@@ -1,0 +1,135 @@
+<?php
+/**
+ * @file
+ * Module that gives you a field formatter, which enables you to link field contents to a destination.
+ */
+
+function linked_field_supported_formatters() {
+  $fields = array(
+    'image',
+    'text_plain',
+  );
+
+  // Allow other modules to alter the supported fields.
+  module_invoke_all('linked_field_supported_fields_alter', $fields);
+
+  return $fields;
+}
+
+/**
+ * Implements hook_field_formatter_info_alter().
+ */
+function linked_field_field_formatter_info_alter(&$info) {
+  $supported = linked_field_supported_formatters();
+
+  foreach ($supported as $s) {
+    $info[$s]['settings']['linked'] = FALSE;
+    $info[$s]['settings']['destination'] = '';
+  }
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary_alter().
+ */
+function linked_field_field_formatter_settings_summary_alter(&$summary, $context) {
+  $display = $context['instance']['display'][$context['view_mode']];
+  $settings = $display['settings'];
+
+  // Normalize the settings.
+  $settings['linked'] = isset($settings['linked']) ? $settings['linked'] : FALSE;
+  $settings['destination'] = isset($settings['destination']) ? $settings['destination'] : '';
+
+  $supported = linked_field_supported_formatters();
+
+  if (in_array($display['type'], $supported)) {
+    if ($settings['linked'] && $settings['destination']) {
+      $summary .= '<br />' . t('Linked to') . ': ' . $settings['destination'];
+    } else {
+      $summary .= ' ';
+    }
+  }
+}
+
+/**
+ * Implements hook_field_formatter_settings_form_alter().
+ */
+function linked_field_field_formatter_settings_form_alter(&$settings_form, $context) {
+  $field = $context['field'];
+  $display = $context['instance']['display'][$context['view_mode']];
+  $settings = $display['settings'];
+
+  $supported = linked_field_supported_formatters();
+
+  $settings['linked'] = isset($settings['linked']) ? $settings['linked'] : FALSE;
+  $settings['destination'] = isset($settings['destination']) ? $settings['destination'] : '';
+
+  if (in_array($display['type'], $supported)) {
+    $settings_form['linked'] = array(
+      '#title' => t('Link this field'),
+      '#type' => 'checkbox',
+      '#default_value' => $settings['linked'],
+    );
+
+    $settings_form['destination'] = array(
+      '#title' => t('Destination'),
+      '#type' => 'textfield',
+      '#default_value' => $settings['destination'],
+      '#required' => TRUE,
+      '#element_validate' => array('token_element_validate'),
+      // @TODO: Why we don't getting node in the token list?
+      '#token_types' => array('node'),
+      '#description' => t('Here you can enter a token which will be used as link url.'),
+      '#states' => array(
+        'visible' => array(
+          'input[name="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked]"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    $settings_form['token'] = array(
+      '#type' => 'container',
+      '#children' => theme('token_tree'),
+      '#states' => array(
+        'visible' => array(
+          'input[name$="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked]"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+  }
+}
+
+/**
+ * Implements hook_field_attach_view_alter().
+ */
+function linked_field_field_attach_view_alter(&$output, $context) {
+  foreach (element_children($output) as $field_name) {
+    $supported = linked_field_supported_formatters();
+
+    if (in_array($output[$field_name]['#formatter'], $supported)) {
+      $element = &$output[$field_name];
+      $instance = field_info_instance($element['#entity_type'], $field_name, $element['#bundle']);
+      $display = isset($instance['display'][$context['view_mode']]) ? $instance['display'][$context['view_mode']] : $instance['display']['default'];
+      $settings = $display['settings'];
+
+      // Normalize the settings.
+      $settings['linked'] = isset($settings['linked']) ? $settings['linked'] : FALSE;
+      $settings['destination'] = isset($settings['destination']) ? $settings['destination'] : '';
+
+      // If the destination field isn't filled for this field, we shouldn't
+      // do anything. Continue to the next field.
+      if (!$settings['destination']) {
+        continue;
+      }
+
+      dpm($element);
+      foreach ($element['#items'] as $delta => $item) {
+        if(isset($element[$delta]['#theme'])) {
+          $element[$delta]['#markup'] = $element[$delta];
+          $element[$delta]['#markup'] = 'bla' . $element[$delta]['#markup'] . 'blub';
+        }
+        //$element[$delta]['#markup'] = 'foo';
+      }
+    }
+    dpm($output);
+  }
+}
