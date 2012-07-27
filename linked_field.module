@@ -58,8 +58,8 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
  * Implements hook_field_formatter_settings_form_alter().
  */
 function linked_field_field_formatter_settings_form_alter(&$settings_form, $context) {
-  dpm($context);
   $field = $context['field'];
+  $entity_type = $context['instance']['entity_type'];
   $display = $context['instance']['display'][$context['view_mode']];
   $settings = $display['settings'];
 
@@ -91,7 +91,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
 
     $settings_form['token'] = array(
       '#type' => 'container',
-      '#children' => theme('token_tree', array('token_types' => array('field_collection'))),
+      '#children' => theme('token_tree', array('token_types' => array($entity_type))),
       '#states' => array(
         'visible' => array(
           'input[name$="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked]"]' => array('checked' => TRUE),
