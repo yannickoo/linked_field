@@ -1,7 +1,8 @@
 <?php
+
 /**
  * @file
- * Module that gives you a field formatter, which enables you to link field contents to a destination.
+ * Module that allows you to link fields.
  */
 
 /**
@@ -74,7 +75,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
       '#attributes' => array('class' => array('linked-field-linked-wrapper')),
       '#attached' => array(
         'css' => array(
-          drupal_get_path('module', 'linked_field') . '/css/linked-field.css'
+          drupal_get_path('module', 'linked_field') . '/css/linked-field.css',
         ),
       ),
     );
@@ -134,7 +135,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
         continue;
       }
 
-      // wrapping the source element into a link
+      // Wrapping the source element into a link.
       $element = array(
         '#theme' => 'link',
         '#text' => drupal_render($element),
