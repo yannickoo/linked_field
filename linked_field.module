@@ -14,7 +14,7 @@ function linked_field_supported_formatters() {
   );
 
   // Allow other modules to alter the supported fields.
-  module_invoke_all('linked_field_supported_fields_alter', $formatters);
+  drupal_alter('linked_field_supported_formatters', $formatters);
 
   return $formatters;
 }
@@ -69,13 +69,23 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
   $settings['destination'] = isset($settings['destination']) ? $settings['destination'] : '';
 
   if (in_array($display['type'], $supported)) {
-    $settings_form['linked'] = array(
+    $settings_form['linked_field'] = array(
+      '#type' => 'container',
+      '#attributes' => array('class' => array('linked-field-linked-wrapper')),
+      '#attached' => array(
+        'css' => array(
+          drupal_get_path('module', 'linked_field') . '/css/linked-field.css'
+        ),
+      ),
+    );
+
+    $settings_form['linked_field']['linked'] = array(
       '#title' => t('Link this field'),
       '#type' => 'checkbox',
       '#default_value' => $settings['linked'],
     );
 
-    $settings_form['destination'] = array(
+    $settings_form['linked_field']['destination'] = array(
       '#title' => t('Destination'),
       '#type' => 'textfield',
       '#default_value' => $settings['destination'],
@@ -84,17 +94,17 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
       '#description' => t('Here you can enter a token which will be used as link url.'),
       '#states' => array(
         'visible' => array(
-          'input[name="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked]"]' => array('checked' => TRUE),
+          'input[name="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked_field][linked]"]' => array('checked' => TRUE),
         ),
       ),
     );
 
-    $settings_form['token'] = array(
+    $settings_form['linked_field']['token'] = array(
       '#type' => 'container',
       '#children' => theme('token_tree', array('token_types' => array($entity_type))),
       '#states' => array(
         'visible' => array(
-          'input[name$="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked]"]' => array('checked' => TRUE),
+          'input[name$="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked_field][linked]"]' => array('checked' => TRUE),
         ),
       ),
     );
