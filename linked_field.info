@@ -4,4 +4,3 @@ core = 7.x
 
 dependencies[] = field_formatter_settings
 dependencies[] = token
-

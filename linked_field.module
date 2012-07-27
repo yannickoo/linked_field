@@ -8,15 +8,15 @@
  * Function to gather supported field formatters.
  */
 function linked_field_supported_formatters() {
-  $fields = array(
+  $formatters = array(
     'image',
     'text_plain',
   );
 
   // Allow other modules to alter the supported fields.
-  module_invoke_all('linked_field_supported_fields_alter', $fields);
+  module_invoke_all('linked_field_supported_fields_alter', $formatters);
 
-  return $fields;
+  return $formatters;
 }
 
 /**
@@ -58,6 +58,7 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
  * Implements hook_field_formatter_settings_form_alter().
  */
 function linked_field_field_formatter_settings_form_alter(&$settings_form, $context) {
+  dpm($context);
   $field = $context['field'];
   $display = $context['instance']['display'][$context['view_mode']];
   $settings = $display['settings'];
@@ -80,8 +81,6 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
       '#default_value' => $settings['destination'],
       '#required' => TRUE,
       '#element_validate' => array('token_element_validate'),
-      // @TODO: Why we don't getting node in the token list?
-      '#token_types' => array('node'),
       '#description' => t('Here you can enter a token which will be used as link url.'),
       '#states' => array(
         'visible' => array(
@@ -92,7 +91,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
 
     $settings_form['token'] = array(
       '#type' => 'container',
-      '#children' => theme('token_tree'),
+      '#children' => theme('token_tree', array('token_types' => array('field_collection'))),
       '#states' => array(
         'visible' => array(
           'input[name$="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked]"]' => array('checked' => TRUE),
@@ -125,15 +124,16 @@ function linked_field_field_attach_view_alter(&$output, $context) {
         continue;
       }
 
-      foreach ($element['#items'] as $delta => $item) {
-        if (isset($element[$delta]['#theme'])) {
-          $element[$delta]['#markup'] = $element[$delta];
-          $element[$delta]['#markup'] = 'bla' . $element[$delta]['#markup'] . 'blub';
-        }
-        else {
-          $element[$delta]['#markup'] = 'foo';
-        }
-      }
+      // wrapping the source element into a link
+      $element = array(
+        '#theme' => 'link',
+        '#text' => drupal_render($element),
+        '#path' => token_replace($settings['destination'], array($element['#entity_type'] => $element['#object'])),
+        '#options' => array(
+          'attributes' => array(),
+          'html' => TRUE,
+        ),
+      );
     }
   }
 }
