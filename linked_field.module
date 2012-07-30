@@ -90,7 +90,9 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
       '#title' => t('Destination'),
       '#type' => 'textfield',
       '#default_value' => $settings['destination'],
-      '#required' => TRUE,
+      // @TODO: Add validation function which checks whether
+      // linked field is checked.
+      //'#required' => TRUE,
       '#element_validate' => array('token_element_validate'),
       '#description' => t('Here you can enter a token which will be used as link url.'),
       '#states' => array(
