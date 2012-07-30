@@ -8,7 +8,9 @@ CONTENTS OF THIS FILE
 INTRODUCTION
 ------------
 
-Current Maintainer: Yannick Leyendecker (http://drupal.org/user/531118)
+Current Maintainer:
+  Yannick Leyendecker (http://drupal.org/user/531118)
+  Fabian Pintsch (http://drupal.org/user/1625944)
 
 Linked Field allows you to link fields.
 
