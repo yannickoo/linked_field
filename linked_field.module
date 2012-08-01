@@ -26,8 +26,8 @@ function linked_field_field_formatter_info_alter(&$info) {
   $supported = linked_field_supported_formatters();
 
   foreach ($supported as $s) {
-    $info[$s]['settings']['linked'] = FALSE;
-    $info[$s]['settings']['destination'] = '';
+    $info[$s]['settings']['linked_field']['linked'] = FALSE;
+    $info[$s]['settings']['linked_field']['destination'] = '';
   }
 }
 
@@ -130,7 +130,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
       // If the destination field isn't filled for this field, we shouldn't
       // do anything. Continue to the next field.
-      if (!$settings['destination']) {
+      if (!$settings['linked_field']['destination']) {
         continue;
       }
 
