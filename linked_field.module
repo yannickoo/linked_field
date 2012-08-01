@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * Module that allows you to link fields.
+ * Module that gives you a field formatter, which enables you to link field contents to a destination.
  */
 
 /**
@@ -40,14 +39,14 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   $settings = $display['settings'];
 
   // Normalize the settings.
-  $settings['linked'] = isset($settings['linked']) ? $settings['linked'] : FALSE;
-  $settings['destination'] = isset($settings['destination']) ? $settings['destination'] : '';
+  $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : FALSE;
+  $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
 
   $supported = linked_field_supported_formatters();
 
   if (in_array($display['type'], $supported)) {
-    if ($settings['linked'] && $settings['destination']) {
-      $summary .= '<br />' . t('Linked to') . ': ' . $settings['destination'];
+    if ($settings['linked_field']['linked'] && $settings['linked_field']['destination']) {
+      $summary .= '<br />' . t('Linked to') . ': ' . $settings['linked_field']['destination'];
     }
     else {
       $summary .= ' ';
@@ -66,8 +65,10 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
 
   $supported = linked_field_supported_formatters();
 
-  $settings['linked'] = isset($settings['linked']) ? $settings['linked'] : FALSE;
-  $settings['destination'] = isset($settings['destination']) ? $settings['destination'] : '';
+  $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : FALSE;
+  $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
+
+  dpm($settings);
 
   if (in_array($display['type'], $supported)) {
     $settings_form['linked_field'] = array(
@@ -75,7 +76,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
       '#attributes' => array('class' => array('linked-field-linked-wrapper')),
       '#attached' => array(
         'css' => array(
-          drupal_get_path('module', 'linked_field') . '/css/linked-field.css',
+          drupal_get_path('module', 'linked_field') . '/css/linked-field.css'
         ),
       ),
     );
@@ -83,15 +84,13 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     $settings_form['linked_field']['linked'] = array(
       '#title' => t('Link this field'),
       '#type' => 'checkbox',
-      '#default_value' => $settings['linked'],
+      '#default_value' => $settings['linked_field']['linked'],
     );
 
     $settings_form['linked_field']['destination'] = array(
       '#title' => t('Destination'),
       '#type' => 'textfield',
-      '#default_value' => $settings['destination'],
-      // @TODO: Add validation function which checks whether
-      // linked field is checked.
+      '#default_value' => $settings['linked_field']['destination'],
       //'#required' => TRUE,
       '#element_validate' => array('token_element_validate'),
       '#description' => t('Here you can enter a token which will be used as link url.'),
@@ -128,8 +127,8 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       $settings = $display['settings'];
 
       // Normalize the settings.
-      $settings['linked'] = isset($settings['linked']) ? $settings['linked'] : FALSE;
-      $settings['destination'] = isset($settings['destination']) ? $settings['destination'] : '';
+      $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : FALSE;
+      $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
 
       // If the destination field isn't filled for this field, we shouldn't
       // do anything. Continue to the next field.
@@ -137,11 +136,11 @@ function linked_field_field_attach_view_alter(&$output, $context) {
         continue;
       }
 
-      // Wrapping the source element into a link.
+      // wrapping the source element into a link
       $element = array(
         '#theme' => 'link',
         '#text' => drupal_render($element),
-        '#path' => token_replace($settings['destination'], array($element['#entity_type'] => $element['#object'])),
+        '#path' => token_replace($settings['linked_field']['destination'], array($element['#entity_type'] => $element['#object'])),
         '#options' => array(
           'attributes' => array(),
           'html' => TRUE,
