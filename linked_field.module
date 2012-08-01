@@ -68,8 +68,6 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
   $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : FALSE;
   $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
 
-  dpm($settings);
-
   if (in_array($display['type'], $supported)) {
     $settings_form['linked_field'] = array(
       '#type' => 'container',
