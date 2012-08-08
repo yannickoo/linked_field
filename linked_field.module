@@ -28,6 +28,7 @@ function linked_field_field_formatter_info_alter(&$info) {
   foreach ($supported as $s) {
     $info[$s]['settings']['linked_field']['linked'] = FALSE;
     $info[$s]['settings']['linked_field']['destination'] = '';
+    $info[$s]['settings']['linked_field']['wrapper'] = '';
   }
 }
 
@@ -38,15 +39,24 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   $display = $context['instance']['display'][$context['view_mode']];
   $settings = $display['settings'];
 
+  // Break when no linked field settings were found.
+  if(!isset($settings['linked_field'])) {
+    return;
+  }
+
   // Normalize the settings.
-  $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : FALSE;
-  $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
+  $linked = $settings['linked_field']['linked'];
+  $destination = $settings['linked_field']['destination'];
+  $wrapper = $settings['linked_field']['wrapper'];
 
   $supported = linked_field_supported_formatters();
 
   if (in_array($display['type'], $supported)) {
-    if ($settings['linked_field']['linked'] && $settings['linked_field']['destination']) {
-      $summary .= '<br />' . t('Linked to') . ': ' . $settings['linked_field']['destination'];
+    if ($linked && $destination) {
+      $summary .= '<br />' . t('Linked to: @destination', array('@destination' => $destination));
+      if($wrapper) {
+        $summary .= '<br />' . t('Wrapped by @wrapper', array('@wrapper' => $wrapper));
+      }
     }
     else {
       $summary .= ' ';
@@ -63,10 +73,16 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
   $display = $context['instance']['display'][$context['view_mode']];
   $settings = $display['settings'];
 
+  // Break when no linked field settings were found.
+  if(!isset($settings['linked_field'])) {
+    return;
+  }
+
   $supported = linked_field_supported_formatters();
 
   $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : FALSE;
   $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
+  $settings['linked_field']['wrapper'] = isset($settings['linked_field']['wrapper']) ? $settings['linked_field']['wrapper'] : '';
 
   if (in_array($display['type'], $supported)) {
     $settings_form['linked_field'] = array(
@@ -89,6 +105,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
       '#title' => t('Destination'),
       '#type' => 'textfield',
       '#default_value' => $settings['linked_field']['destination'],
+      // @TODO: Add validation function!
       //'#required' => TRUE,
       '#element_validate' => array('token_element_validate'),
       '#description' => t('Here you can enter a token which will be used as link url.'),
@@ -108,6 +125,32 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
         ),
       ),
     );
+
+    $settings_form['linked_field']['wrapper'] = array(
+      '#title' => t('Wrapper'),
+      '#type' => 'select',
+      '#options' => array(
+        '' => t('None'),
+        'div' => 'DIV',
+        'span' => 'SPAN',
+        'h1' => 'H1',
+        'h2' => 'H2',
+        'h3' => 'H3',
+        'h4' => 'H4',
+        'h5' => 'H5',
+        'h6' => 'H6',
+        'p' => 'P',
+        'strong' => 'STRONG',
+        'em' => 'EM',
+      ),
+      '#default_value' => ($settings['linked_field']['wrapper']) ? $settings['linked_field']['wrapper'] : '',
+      '#description' => t('Here you can select a wrapper for the link.'),
+      '#states' => array(
+        'visible' => array(
+          'input[name="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked_field][linked]"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
   }
 }
 
@@ -116,33 +159,55 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
  */
 function linked_field_field_attach_view_alter(&$output, $context) {
   foreach (element_children($output) as $field_name) {
-    $supported = linked_field_supported_formatters();
-
-    if (in_array($output[$field_name]['#formatter'], $supported)) {
       $element = &$output[$field_name];
       $instance = field_info_instance($element['#entity_type'], $field_name, $element['#bundle']);
       $display = isset($instance['display'][$context['view_mode']]) ? $instance['display'][$context['view_mode']] : $instance['display']['default'];
       $settings = $display['settings'];
 
-      // Normalize the settings.
-      $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : FALSE;
-      $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
-
-      // If the destination field isn't filled for this field, we shouldn't
-      // do anything. Continue to the next field.
-      if (!$settings['linked_field']['destination']) {
+      // Continue when no linked field settings were found.
+      if(!isset($settings['linked_field'])) {
         continue;
       }
 
-      // wrapping the source element into a link
-      $element = array(
-        '#theme' => 'link',
-        '#text' => drupal_render($element),
-        '#path' => token_replace($settings['linked_field']['destination'], array($element['#entity_type'] => $element['#object'])),
-        '#options' => array(
-          'attributes' => array(),
-          'html' => TRUE,
-        ),
+      // Getting supported field formatters.
+      $supported = linked_field_supported_formatters();
+
+      if (in_array($output[$field_name]['#formatter'], $supported)) {
+      // Normalize the settings.
+      $linked = $settings['linked_field']['linked'];
+      $destination = $settings['linked_field']['destination'];
+      $wrapper = $settings['linked_field']['wrapper'];
+
+      // If the destination field isn't filled for this field, we shouldn't
+      // do anything. Continue to the next field.
+      if (!$destination) {
+        continue;
+      }
+
+      // Only modify the element when the token_replace really replace sth.
+      $path = token_replace($destination, array($element['#entity_type'] => $element['#object']));
+      if ($path != $destination) {
+        // Wrapping the source element into a link.
+        $element = array(
+          '#theme' => 'link',
+          '#text' => drupal_render($element),
+          '#path' => token_replace($destination, array($element['#entity_type'] => $element['#object'])),
+          '#options' => array(
+            'attributes' => array(),
+            'html' => TRUE,
+          ),
+        );
+      } else {
+        // Otherwise we just render the field.
+        $element = array(
+          '#markup' => drupal_render($element),
+        );
+      }
+
+      // Adding the prefix and suffix.
+      $element += array(
+        '#prefix' => ($wrapper) ? '<' . $wrapper . '>' : '',
+        '#suffix' => ($wrapper) ? '</' . $wrapper . '>' : '',
       );
     }
   }
