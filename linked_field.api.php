@@ -15,7 +15,7 @@
  *
  * This hook is invoked by linked_field_supported_formatters().
  */
-function hook_linked_field_supported_fields_alter(&$formatters) {
+function hook_linked_field_supported_formatters_alter(&$formatters) {
 
 }
 
