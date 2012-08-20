@@ -111,7 +111,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
       '#description' => t('Here you can enter a token which will be used as link url.'),
       '#states' => array(
         'visible' => array(
-          'input[name="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked_field][linked]"]' => array('checked' => TRUE),
+          'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
         ),
       ),
     );
@@ -121,7 +121,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
       '#children' => theme('token_tree', array('token_types' => array($entity_type))),
       '#states' => array(
         'visible' => array(
-          'input[name$="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked_field][linked]"]' => array('checked' => TRUE),
+          'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
         ),
       ),
     );
@@ -147,7 +147,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
       '#description' => t('Here you can select a wrapper for the link.'),
       '#states' => array(
         'visible' => array(
-          'input[name="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked_field][linked]"]' => array('checked' => TRUE),
+          'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
         ),
       ),
     );
