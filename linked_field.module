@@ -159,20 +159,20 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
  */
 function linked_field_field_attach_view_alter(&$output, $context) {
   foreach (element_children($output) as $field_name) {
-      $element = &$output[$field_name];
-      $instance = field_info_instance($element['#entity_type'], $field_name, $element['#bundle']);
-      $display = isset($instance['display'][$context['view_mode']]) ? $instance['display'][$context['view_mode']] : $instance['display']['default'];
-      $settings = $display['settings'];
+    $element = $output[$field_name];
+    $instance = field_info_instance($element['#entity_type'], $field_name, $element['#bundle']);
+    $display = isset($instance['display'][$context['view_mode']]) ? $instance['display'][$context['view_mode']] : $instance['display']['default'];
+    $settings = $display['settings'];
 
-      // Continue when no linked field settings were found.
-      if(!isset($settings['linked_field'])) {
-        continue;
-      }
+    // Continue when no linked field settings were found.
+    if(!isset($settings['linked_field'])) {
+      continue;
+    }
 
-      // Getting supported field formatters.
-      $supported = linked_field_supported_formatters();
+    // Getting supported field formatters.
+    $supported = linked_field_supported_formatters();
 
-      if (in_array($output[$field_name]['#formatter'], $supported)) {
+    if (in_array($output[$field_name]['#formatter'], $supported)) {
       // Normalize the settings.
       $linked = $settings['linked_field']['linked'];
       $destination = $settings['linked_field']['destination'];
@@ -186,11 +186,12 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
       // Only modify the element when the token_replace really replace sth.
       $path = token_replace($destination, array($element['#entity_type'] => $element['#object']));
+      $rendered = drupal_render($element);
       if ($path != $destination) {
         // Wrapping the source element into a link.
-        $element = array(
+        $output[$field_name] = array(
           '#theme' => 'link',
-          '#text' => drupal_render($element),
+          '#text' => field_filter_xss($rendered),
           '#path' => token_replace($destination, array($element['#entity_type'] => $element['#object'])),
           '#options' => array(
             'attributes' => array(),
@@ -199,16 +200,33 @@ function linked_field_field_attach_view_alter(&$output, $context) {
         );
       } else {
         // Otherwise we just render the field.
-        $element = array(
-          '#markup' => drupal_render($element),
+        $output[$field_name] = array(
+          '#markup' => $rendered,
         );
       }
 
       // Adding the prefix and suffix.
-      $element += array(
+      $output[$field_name] += array(
         '#prefix' => ($wrapper) ? '<' . $wrapper . '>' : '',
         '#suffix' => ($wrapper) ? '</' . $wrapper . '>' : '',
       );
+
+      // Copy properties from the original field output to the new output like
+      // weight and access which should remain the same.
+      $shared_keys = array(
+        '#weight',
+        '#access',
+        '#view_mode',
+        '#language',
+        '#field_name',
+        '#field_type',
+        '#entity_type',
+        '#bundle',
+        '#object',
+        '#items',
+      );
+
+      $output[$field_name] += array_intersect_key($element, drupal_map_assoc($shared_keys));
     }
   }
 }
