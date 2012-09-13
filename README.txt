@@ -25,9 +25,4 @@ INSTALLATION
    and you will see a destination field and the token list.
    Select a token and click "Update".
 
-
-   Supported formatters are: image and text_plain
-   When need more formatters just take a look at the linked_field.api.php file.
-
-
 [1] http://drupal.org/documentation/install/modules-themes/modules-7
