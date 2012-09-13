@@ -88,7 +88,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#description' => t('Here you can enter a token which will be used as link url.'),
     '#states' => array(
       'visible' => array(
-        'input[name="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked_field][linked]"]' => array('checked' => TRUE),
+        'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
       ),
     ),
   );
@@ -98,7 +98,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#children' => theme('token_tree', array('token_types' => array($entity_type))),
     '#states' => array(
       'visible' => array(
-        'input[name$="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked_field][linked]"]' => array('checked' => TRUE),
+        'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
       ),
     ),
   );
@@ -124,7 +124,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#description' => t('Here you can select a wrapper for the link.'),
     '#states' => array(
       'visible' => array(
-        'input[name="fields[' . $field['field_name'] . '][settings_edit_form][settings][linked_field][linked]"]' => array('checked' => TRUE),
+        'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
       ),
     ),
   );
@@ -135,7 +135,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
  */
 function linked_field_field_attach_view_alter(&$output, $context) {
   foreach (element_children($output) as $field_name) {
-    $element = &$output[$field_name];
+    $element = $output[$field_name];
     $instance = field_info_instance($element['#entity_type'], $field_name, $element['#bundle']);
     $display = isset($instance['display'][$context['view_mode']]) ? $instance['display'][$context['view_mode']] : $instance['display']['default'];
     $settings = $display['settings'];
@@ -145,42 +145,57 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       continue;
     }
 
-    // Normalize the settings.
-    $linked = $settings['linked_field']['linked'];
-    $destination = $settings['linked_field']['destination'];
-    $wrapper = $settings['linked_field']['wrapper'];
+      // Normalize the settings.
+      $linked = $settings['linked_field']['linked'];
+      $destination = $settings['linked_field']['destination'];
+      $wrapper = $settings['linked_field']['wrapper'];
 
-    // If the destination field isn't filled for this field, we shouldn't
-    // do anything. Continue to the next field.
-    if (!$destination || !$linked) {
-      continue;
-    }
+      // If the destination field isn't filled for this field, we shouldn't
+      // do anything. Continue to the next field.
+      if (!$destination || !$linked) {
+        continue;
+      }
 
-    // Only modify the element when the token_replace really replace sth.
-    $path = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
-    if ($path != '') {
-      // Render the field contents
-      $html_string = drupal_render($element);
+      // Only modify the element when the token_replace really replace sth.
+      $path = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
+      $rendered = drupal_render($element);
+      if ($path != '') {
+        // Modify the html code
+        linked_field_prepare_link_field($rendered, $path);
 
-      // Modify the html code
-      linked_field_prepare_link_field($html_string, $path);
+        $output[$field_name] = array(
+          '#markup' => $rendered,
+        );
+      }
+      else {
+        // Otherwise we just render the field.
+        $output[$field_name] = array(
+          '#markup' => $rendered,
+        );
+      }
 
-      $element = array(
-        '#markup' => $html_string,
+      // Adding the prefix and suffix.
+      $output[$field_name] += array(
+        '#prefix' => ($wrapper) ? '<' . $wrapper . '>' : '',
+        '#suffix' => ($wrapper) ? '</' . $wrapper . '>' : '',
       );
-    }
-    else {
-      // Otherwise we just render the field.
-      $element = array(
-        '#markup' => drupal_render($element),
-      );
-    }
 
-    // Adding the prefix and suffix.
-    $element += array(
-      '#prefix' => ($wrapper) ? '<' . $wrapper . '>' : '',
-      '#suffix' => ($wrapper) ? '</' . $wrapper . '>' : '',
-    );
+      // Copy properties from the original field output to the new output like
+      // weight and access which should remain the same.
+      $shared_keys = array(
+        '#weight',
+        '#access',
+        '#view_mode',
+        '#language',
+        '#field_name',
+        '#field_type',
+        '#entity_type',
+        '#bundle',
+        '#object',
+        '#items',
+      );
+
+      $output[$field_name] += array_intersect_key($element, drupal_map_assoc($shared_keys));
   }
 }
 
@@ -191,10 +206,10 @@ function linked_field_prepare_link_field(&$text, $path) {
   $html_dom = filter_dom_load($text);
   $body = $html_dom->getElementsByTagName('body');
   $nodes = $body->item(0);
-  
+
   // Recursively walk over the DOMDocument body and place the links.
   linked_field_link_field($nodes, $html_dom, $path);
-  
+
   $text = filter_dom_serialize($html_dom);
 }
 
@@ -210,14 +225,13 @@ function linked_field_link_field($nodes, $dom, $path) {
       if ($node->nodeType == XML_TEXT_NODE) {
         $text = $node->textContent;
         if (strlen(trim($text))) {
-          // Wrap this text node.
+          // Wrap this node.
           $element = $dom->createElement('a', $node->textContent);
           $element->setAttribute('href', $path);
           $nodes->replaceChild($element, $node);
         }
       }
       else if ($node->nodeName == 'img') {
-        // Wrap this img node.
         $element = $dom->createElement('a');
         $element->setAttribute('href', $path);
         $nodes->replaceChild($element, $node);
