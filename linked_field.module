@@ -2,7 +2,8 @@
 
 /**
  * @file
- * Module that gives you a field formatter, which enables you to link field contents to a destination.
+ * Module that gives you a field formatter, which enables you to link field
+ * contents to a destination.
  */
 
 /**
@@ -67,7 +68,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#attributes' => array('class' => array('linked-field-linked-wrapper')),
     '#attached' => array(
       'css' => array(
-        drupal_get_path('module', 'linked_field') . '/css/linked-field.css'
+        drupal_get_path('module', 'linked_field') . '/css/linked-field.css',
       ),
     ),
   );
@@ -83,7 +84,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['destination'],
     // @TODO: Add validation function!
-    //'#required' => TRUE,
+    // '#required' => TRUE,
     '#element_validate' => array('token_element_validate'),
     '#description' => t('Here you can enter a token which will be used as link url.'),
     '#states' => array(
@@ -145,57 +146,57 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       continue;
     }
 
-      // Normalize the settings.
-      $linked = $settings['linked_field']['linked'];
-      $destination = $settings['linked_field']['destination'];
-      $wrapper = $settings['linked_field']['wrapper'];
+    // Normalize the settings.
+    $linked = $settings['linked_field']['linked'];
+    $destination = $settings['linked_field']['destination'];
+    $wrapper = $settings['linked_field']['wrapper'];
 
-      // If the destination field isn't filled for this field, we shouldn't
-      // do anything. Continue to the next field.
-      if (!$destination || !$linked) {
-        continue;
-      }
+    // If the destination field isn't filled for this field, we shouldn't
+    // do anything. Continue to the next field.
+    if (!$destination || !$linked) {
+      continue;
+    }
 
-      // Only modify the element when the token_replace really replace sth.
-      $path = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
-      $rendered = drupal_render($element);
-      if ($path != '') {
-        // Modify the html code
-        linked_field_prepare_link_field($rendered, $path);
+    // Only modify the element when the token_replace really replace sth.
+    $path = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
+    $rendered = drupal_render($element);
+    if ($path != '') {
+      // Modify the HTML code.
+      linked_field_prepare_link_field($rendered, $path);
 
-        $output[$field_name] = array(
-          '#markup' => $rendered,
-        );
-      }
-      else {
-        // Otherwise we just render the field.
-        $output[$field_name] = array(
-          '#markup' => $rendered,
-        );
-      }
-
-      // Adding the prefix and suffix.
-      $output[$field_name] += array(
-        '#prefix' => ($wrapper) ? '<' . $wrapper . '>' : '',
-        '#suffix' => ($wrapper) ? '</' . $wrapper . '>' : '',
+      $output[$field_name] = array(
+        '#markup' => $rendered,
       );
-
-      // Copy properties from the original field output to the new output like
-      // weight and access which should remain the same.
-      $shared_keys = array(
-        '#weight',
-        '#access',
-        '#view_mode',
-        '#language',
-        '#field_name',
-        '#field_type',
-        '#entity_type',
-        '#bundle',
-        '#object',
-        '#items',
+    }
+    else {
+      // Otherwise we just render the field.
+      $output[$field_name] = array(
+        '#markup' => $rendered,
       );
+    }
 
-      $output[$field_name] += array_intersect_key($element, drupal_map_assoc($shared_keys));
+    // Adding the prefix and suffix.
+    $output[$field_name] += array(
+      '#prefix' => ($wrapper) ? '<' . $wrapper . '>' : '',
+      '#suffix' => ($wrapper) ? '</' . $wrapper . '>' : '',
+    );
+
+    // Copy properties from the original field output to the new output like
+    // weight and access which should remain the same.
+    $shared_keys = array(
+      '#weight',
+      '#access',
+      '#view_mode',
+      '#language',
+      '#field_name',
+      '#field_type',
+      '#entity_type',
+      '#bundle',
+      '#object',
+      '#items',
+    );
+
+    $output[$field_name] += array_intersect_key($element, drupal_map_assoc($shared_keys));
   }
 }
 
@@ -231,7 +232,7 @@ function linked_field_link_field($nodes, $dom, $path) {
           $nodes->replaceChild($element, $node);
         }
       }
-      else if ($node->nodeName == 'img') {
+      elseif ($node->nodeName == 'img') {
         $element = $dom->createElement('a');
         $element->setAttribute('href', $path);
         $nodes->replaceChild($element, $node);
