@@ -13,7 +13,6 @@ function linked_field_field_formatter_info_alter(&$infos) {
   foreach ($infos as &$info) {
     $info['settings']['linked_field']['linked'] = FALSE;
     $info['settings']['linked_field']['destination'] = '';
-    $info['settings']['linked_field']['wrapper'] = '';
   }
 }
 
@@ -32,13 +31,9 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   // Normalize the settings.
   $linked = $settings['linked_field']['linked'];
   $destination = $settings['linked_field']['destination'];
-  $wrapper = $settings['linked_field']['wrapper'];
 
   if ($linked && $destination) {
     $summary .= '<br />' . t('Linked to: @destination', array('@destination' => $destination));
-    if ($wrapper) {
-      $summary .= '<br />' . t('Wrapped by @wrapper', array('@wrapper' => $wrapper));
-    }
   }
   else {
     $summary .= ' ';
@@ -61,7 +56,6 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
 
   $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : FALSE;
   $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
-  $settings['linked_field']['wrapper'] = isset($settings['linked_field']['wrapper']) ? $settings['linked_field']['wrapper'] : '';
 
   $settings_form['linked_field'] = array(
     '#type' => 'container',
@@ -83,8 +77,6 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#title' => t('Destination'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['destination'],
-    // @TODO: Add validation function!
-    // '#required' => TRUE,
     '#element_validate' => array('token_element_validate'),
     '#description' => t('Here you can enter a token which will be used as link url.'),
     '#states' => array(
@@ -97,32 +89,6 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
   $settings_form['linked_field']['token'] = array(
     '#type' => 'container',
     '#children' => theme('token_tree', array('token_types' => array($entity_type))),
-    '#states' => array(
-      'visible' => array(
-        'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
-      ),
-    ),
-  );
-
-  $settings_form['linked_field']['wrapper'] = array(
-    '#title' => t('Wrapper'),
-    '#type' => 'select',
-    '#options' => array(
-      '' => t('None'),
-      'div' => 'DIV',
-      'span' => 'SPAN',
-      'h1' => 'H1',
-      'h2' => 'H2',
-      'h3' => 'H3',
-      'h4' => 'H4',
-      'h5' => 'H5',
-      'h6' => 'H6',
-      'p' => 'P',
-      'strong' => 'STRONG',
-      'em' => 'EM',
-    ),
-    '#default_value' => ($settings['linked_field']['wrapper']) ? $settings['linked_field']['wrapper'] : '',
-    '#description' => t('Here you can select a wrapper for the link.'),
     '#states' => array(
       'visible' => array(
         'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
@@ -149,7 +115,6 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     // Normalize the settings.
     $linked = $settings['linked_field']['linked'];
     $destination = $settings['linked_field']['destination'];
-    $wrapper = $settings['linked_field']['wrapper'];
 
     // If the destination field isn't filled for this field, we shouldn't
     // do anything. Continue to the next field.
@@ -161,24 +126,22 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     $path = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
     $rendered = drupal_render($element);
     if ($path != '') {
-      // Modify the HTML code.
-      linked_field_prepare_link_field($rendered, $path);
+      // Convert html code to a DOMDocument object.
+      $html_dom = filter_dom_load($rendered);
+      // Getting the <body> element.
+      $body = $html_dom->getElementsByTagName('body');
+      $nodes = $body->item(0);
 
-      $output[$field_name] = array(
-        '#markup' => $rendered,
-      );
-    }
-    else {
-      // Otherwise we just render the field.
-      $output[$field_name] = array(
-        '#markup' => $rendered,
-      );
+      // Recursively walk over the DOMDocument body and place the links.
+      linked_field_link_field($nodes, $html_dom, $path);
+
+      // Converting the DOMDocument object back to html code.
+      $rendered = filter_dom_serialize($html_dom);
     }
 
-    // Adding the prefix and suffix.
-    $output[$field_name] += array(
-      '#prefix' => ($wrapper) ? '<' . $wrapper . '>' : '',
-      '#suffix' => ($wrapper) ? '</' . $wrapper . '>' : '',
+     // Add the rendered code as markup.
+    $output[$field_name] = array(
+      '#markup' => $rendered,
     );
 
     // Copy properties from the original field output to the new output like
@@ -201,42 +164,37 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 }
 
 /**
- * Creates a DOMDocument object, linkes the relevant parts of the tree.
- */
-function linked_field_prepare_link_field(&$text, $path) {
-  $html_dom = filter_dom_load($text);
-  $body = $html_dom->getElementsByTagName('body');
-  $nodes = $body->item(0);
-
-  // Recursively walk over the DOMDocument body and place the links.
-  linked_field_link_field($nodes, $html_dom, $path);
-
-  $text = filter_dom_serialize($html_dom);
-}
-
-/**
  * Recursive function for linking text parts and images in DOMNodes.
+ * 
+ * @param DOMNode $node
+ *   An object which gets investigated.
+ * @param DOMDocument $dom
+ *   An object which represents an entire HTML or XML document.
+ * @param string $path
+ *   The destination for the link.
  */
-function linked_field_link_field($nodes, $dom, $path) {
-  if ($nodes->hasChildNodes() && $nodes->nodeName != 'a') {
-    $c = $nodes->childNodes->length;
+function linked_field_link_field($node, $dom, $path) {
+  if ($node->hasChildNodes() && $node->nodeName != 'a') {
+    $c = $node->childNodes->length;
     for ($i = $c; $i > 0; --$i) {
-      $node = $nodes->childNodes->item($i - 1);
-      linked_field_link_field($node, $dom, $path);
-      if ($node->nodeType == XML_TEXT_NODE) {
-        $text = $node->textContent;
+      $child = $node->childNodes->item($i - 1);
+      linked_field_link_field($child, $dom, $path);
+      if ($child->nodeType == XML_TEXT_NODE) {
+        $text = $child->textContent;
         if (strlen(trim($text))) {
-          // Wrap this node.
-          $element = $dom->createElement('a', $node->textContent);
+          // Create new <a> element, set the text and the href attribute.
+          $element = $dom->createElement('a', $child->textContent);
           $element->setAttribute('href', $path);
-          $nodes->replaceChild($element, $node);
+          // Replace the the original element with the new one.
+          $node->replaceChild($element, $child);
         }
       }
-      elseif ($node->nodeName == 'img') {
+      elseif ($child->nodeName == 'img') {
+        // Create new <a> element, set the href and append the image.
         $element = $dom->createElement('a');
         $element->setAttribute('href', $path);
-        $nodes->replaceChild($element, $node);
-        $element->appendChild($node);
+        $node->replaceChild($element, $child);
+        $element->appendChild($child);
       }
     }
   }
