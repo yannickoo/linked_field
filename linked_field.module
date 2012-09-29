@@ -128,7 +128,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     if ($path != '') {
       // Generate a correct link.
       $path = url($path);
-      // Convert html code to a DOMDocument object.
+      // Convert HTML code to a DOMDocument object.
       $html_dom = filter_dom_load($rendered);
       // Getting the <body> element.
       $body = $html_dom->getElementsByTagName('body');
@@ -137,7 +137,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       // Recursively walk over the DOMDocument body and place the links.
       linked_field_link_field($nodes, $html_dom, $path);
 
-      // Converting the DOMDocument object back to html code.
+      // Converting the DOMDocument object back to HTML code.
       $rendered = filter_dom_serialize($html_dom);
     }
 
