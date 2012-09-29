@@ -126,6 +126,8 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     $path = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
     $rendered = drupal_render($element);
     if ($path != '') {
+      // Generate a correct link.
+      $path = url($path);
       // Convert html code to a DOMDocument object.
       $html_dom = filter_dom_load($rendered);
       // Getting the <body> element.
@@ -165,7 +167,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
 /**
  * Recursive function for linking text parts and images in DOMNodes.
- * 
+ *
  * @param DOMNode $node
  *   An object which gets investigated.
  * @param DOMDocument $dom
