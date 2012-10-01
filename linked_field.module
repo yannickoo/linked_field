@@ -141,7 +141,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       $rendered = filter_dom_serialize($html_dom);
     }
 
-     // Add the rendered code as markup.
+    // Add the rendered code as markup.
     $output[$field_name] = array(
       '#markup' => $rendered,
     );
