@@ -124,44 +124,27 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
     // Only modify the element when the token_replace really replace sth.
     $path = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
-    $rendered = drupal_render($element);
+
     if ($path != '') {
       // Generate a correct link.
       $path = url($path);
-      // Convert HTML code to a DOMDocument object.
-      $html_dom = filter_dom_load($rendered);
-      // Getting the <body> element.
-      $body = $html_dom->getElementsByTagName('body');
-      $nodes = $body->item(0);
 
-      // Recursively walk over the DOMDocument body and place the links.
-      linked_field_link_field($nodes, $html_dom, $path);
+      foreach(element_children($element) as $delta) {
+        $rendered = drupal_render($element[$delta]);
+        // Convert HTML code to a DOMDocument object.
+        $html_dom = filter_dom_load($rendered);
+        // Getting the <body> element.
+        $body = $html_dom->getElementsByTagName('body');
+        $nodes = $body->item(0);
 
-      // Converting the DOMDocument object back to HTML code.
-      $rendered = filter_dom_serialize($html_dom);
+        // Recursively walk over the DOMDocument body and place the links.
+        linked_field_link_field($nodes, $html_dom, $path);
+
+        // Converting the DOMDocument object back to HTML code.
+        $rendered = filter_dom_serialize($html_dom);
+        $output[$field_name][$delta] = array('#markup' => $rendered);
+      }
     }
-
-    // Add the rendered code as markup.
-    $output[$field_name] = array(
-      '#markup' => $rendered,
-    );
-
-    // Copy properties from the original field output to the new output like
-    // weight and access which should remain the same.
-    $shared_keys = array(
-      '#weight',
-      '#access',
-      '#view_mode',
-      '#language',
-      '#field_name',
-      '#field_type',
-      '#entity_type',
-      '#bundle',
-      '#object',
-      '#items',
-    );
-
-    $output[$field_name] += array_intersect_key($element, drupal_map_assoc($shared_keys));
   }
 }
 
