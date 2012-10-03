@@ -94,7 +94,6 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#title' => t('Destination'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['destination'],
-    '#element_validate' => array('token_element_validate'),
     '#description' => t('Here you can enter a token which will be used as link url.'),
     '#states' => array(
       'visible' => array(
@@ -117,7 +116,6 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#title' => t('Title'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['title'],
-    '#element_validate' => array('token_element_validate'),
     '#description' => t('Here you can enter a token which will be used as link title.'),
     '#states' => array(
       'visible' => array(
@@ -130,7 +128,6 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#title' => t('Target'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['target'],
-    '#element_validate' => array('token_element_validate'),
     '#description' => t('Here you can enter a token which will be used as link target.'),
     '#states' => array(
       'visible' => array(
