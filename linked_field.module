@@ -15,6 +15,7 @@ function linked_field_field_formatter_info_alter(&$infos) {
     $info['settings']['linked_field']['destination'] = '';
     $info['settings']['linked_field']['title'] = '';
     $info['settings']['linked_field']['target'] = '';
+    $info['settings']['linked_field']['text'] = '';
   }
 }
 
@@ -35,6 +36,7 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   $destination = $settings['linked_field']['destination'];
   $title = (isset($settings['linked_field']['title'])) ? $settings['linked_field']['title'] : '';
   $target = (isset($settings['linked_field']['target'])) ? $settings['linked_field']['target'] : '';
+  $text = (isset($settings['linked_field']['text'])) ? $settings['linked_field']['text'] : '';
 
   $summary_items = array();
   $summary_items[] = t('Destination: @destination', array('@destination' => $destination));
@@ -45,6 +47,10 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
 
   if ($target) {
     $summary_items[] = t('Target: @target', array('@target' => $target));
+  }
+
+  if ($text) {
+    $summary_items[] = t('Text: @text', array('@text' => $text));
   }
 
   if ($linked && $destination) {
@@ -73,6 +79,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
   $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
   $settings['linked_field']['title'] = isset($settings['linked_field']['title']) ? $settings['linked_field']['title'] : '';
   $settings['linked_field']['target'] = isset($settings['linked_field']['target']) ? $settings['linked_field']['target'] : '';
+  $settings['linked_field']['text'] = isset($settings['linked_field']['text']) ? $settings['linked_field']['text'] : '';
 
   $settings_form['linked_field'] = array(
     '#type' => 'container',
@@ -135,6 +142,18 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
       ),
     ),
   );
+
+  $settings_form['linked_field']['text'] = array(
+    '#title' => t('Text'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['linked_field']['text'],
+    '#description' => t('Here you can enter a token which will be used as link text.'),
+    '#states' => array(
+      'visible' => array(
+        'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
 }
 
 /**
@@ -157,6 +176,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     $destination = $settings['linked_field']['destination'];
     $title = (isset($settings['linked_field']['title'])) ? $settings['linked_field']['title'] : '';
     $target = (isset($settings['linked_field']['target'])) ? $settings['linked_field']['target'] : '';
+    $text = (isset($settings['linked_field']['text'])) ? $settings['linked_field']['text'] : '';
 
     // If the destination field isn't filled for this field, we shouldn't
     // do anything. Continue to the next field.
@@ -168,6 +188,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     $path = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
     $title = token_replace($title, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
     $target = token_replace($target, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
+    $text = token_replace($text, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
 
     if ($path != '') {
       // Generate a correct link.
@@ -181,7 +202,12 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       );
 
       foreach (element_children($element) as $delta) {
-        $rendered = drupal_render($element[$delta]);
+        if(!$text) {
+          $rendered = drupal_render($element[$delta]);
+        }
+        else {
+          $rendered = $text;
+        }
         // Convert HTML code to a DOMDocument object.
         $html_dom = filter_dom_load($rendered);
         // Getting the <body> element.
@@ -219,7 +245,7 @@ function linked_field_link_field($node, $dom, $attributes) {
         $text = $child->textContent;
         if (strlen(trim($text))) {
           // Create new <a> element, set the text and the href attribute.
-          $element = $dom->createElement('a', $child->textContent);
+          $element = $dom->createElement('a', $text);
 
           // Adding the attributes.
           foreach ($attributes as $name => $value) {
