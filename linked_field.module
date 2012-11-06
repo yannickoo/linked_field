@@ -116,9 +116,11 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     ),
   );
 
-  $settings_form['linked_field']['token'] = array(
-    '#type' => 'container',
-    '#children' => theme('token_tree', array('token_types' => array($entity_type))),
+  $settings_form['linked_field']['advanced'] = array(
+    '#title' => t('Advanced'),
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
     '#states' => array(
       'visible' => array(
         'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
@@ -126,47 +128,37 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     ),
   );
 
-  $settings_form['linked_field']['title'] = array(
+  $settings_form['linked_field']['advanced']['title'] = array(
     '#title' => t('Title'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['title'],
-    '#description' => t('Here you can enter a token which will be used as link title.'),
-    '#states' => array(
-      'visible' => array(
-        'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
-      ),
-    ),
+    '#description' => t('Here you can enter a token which will be used as link <em>title</em> attribute.'),
   );
 
-  $settings_form['linked_field']['target'] = array(
+  $settings_form['linked_field']['advanced']['target'] = array(
     '#title' => t('Target'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['target'],
-    '#description' => t('Here you can enter a token which will be used as link target.'),
-    '#states' => array(
-      'visible' => array(
-        'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
-      ),
-    ),
+    '#description' => t('Here you can enter a token which will be used as link <em>target</em> attribute..'),
   );
 
-  $settings_form['linked_field']['rel'] = array(
+  $settings_form['linked_field']['advanced']['rel'] = array(
     '#title' => t('Relationship'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['rel'],
-    '#description' => t('Here you can enter a token which will be used as link relationship.'),
-    '#states' => array(
-      'visible' => array(
-        'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
-      ),
-    ),
+    '#description' => t('Here you can enter a token which will be used as link <em>rel</em> attribute.'),
   );
 
-  $settings_form['linked_field']['text'] = array(
+  $settings_form['linked_field']['advanced']['text'] = array(
     '#title' => t('Text'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['text'],
     '#description' => t('Here you can enter a token which will be used as link text.'),
+  );
+
+  $settings_form['linked_field']['token'] = array(
+    '#type' => 'container',
+    '#children' => theme('token_tree', array('token_types' => array($entity_type))),
     '#states' => array(
       'visible' => array(
         'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
