@@ -11,12 +11,18 @@
  */
 function linked_field_field_formatter_info_alter(&$infos) {
   foreach ($infos as &$info) {
-    $info['settings']['linked_field']['linked'] = FALSE;
-    $info['settings']['linked_field']['destination'] = '';
-    $info['settings']['linked_field']['title'] = '';
-    $info['settings']['linked_field']['target'] = '';
-    $info['settings']['linked_field']['rel'] = '';
-    $info['settings']['linked_field']['text'] = '';
+    $info['settings'] += array(
+      'linked_field' => array(
+        'linked' => 0,
+        'destination' => '',
+        'advanced' => array(
+          'target' => '',
+          'class' => '',
+          'rel' => '',
+          'text' => '',
+        ),
+      ),
+    );
   }
 }
 
@@ -35,10 +41,11 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   // Normalize the settings.
   $linked = $settings['linked_field']['linked'];
   $destination = $settings['linked_field']['destination'];
-  $title = (isset($settings['linked_field']['title'])) ? $settings['linked_field']['title'] : '';
-  $target = (isset($settings['linked_field']['target'])) ? $settings['linked_field']['target'] : '';
-  $rel = (isset($settings['linked_field']['rel'])) ? $settings['linked_field']['rel'] : '';
-  $text = (isset($settings['linked_field']['text'])) ? $settings['linked_field']['text'] : '';
+  $title = isset($settings['linked_field']['advanced']['title']) ? $settings['linked_field']['advanced']['title'] : '';
+  $target = isset($settings['linked_field']['advanced']['target']) ? $settings['linked_field']['advanced']['target'] : '';
+  $class = isset($settings['linked_field']['advanced']['class']) ? $settings['linked_field']['advanced']['class'] : '';
+  $rel = isset($settings['linked_field']['advanced']['rel']) ? $settings['linked_field']['advanced']['rel'] : '';
+  $text = isset($settings['linked_field']['advanced']['text']) ? $settings['linked_field']['advanced']['text'] : '';
 
   $summary_items = array();
   $summary_items[] = t('Destination: @destination', array('@destination' => $destination));
@@ -51,6 +58,10 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
     $summary_items[] = t('Target: @target', array('@target' => $target));
   }
 
+  if ($class) {
+    $summary_items[] = t('Class: @class', array('@class' => $class));
+  }
+
   if ($rel) {
     $summary_items[] = t('Relationship: @rel', array('@rel' => $rel));
   }
@@ -60,7 +71,7 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   }
 
   if ($linked && $destination) {
-    $summary .= '<br />' . theme('item_list', array('items' => $summary_items, 'title' => 'Linked Field'));
+    $summary .= theme('item_list', array('items' => $summary_items, 'title' => 'Linked Field'));
   }
   else {
     $summary .= ' ';
@@ -81,12 +92,13 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     return;
   }
 
-  $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : FALSE;
+  $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : 0;
   $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
-  $settings['linked_field']['title'] = isset($settings['linked_field']['title']) ? $settings['linked_field']['title'] : '';
-  $settings['linked_field']['target'] = isset($settings['linked_field']['target']) ? $settings['linked_field']['target'] : '';
-  $settings['linked_field']['rel'] = isset($settings['linked_field']['rel']) ? $settings['linked_field']['rel'] : '';
-  $settings['linked_field']['text'] = isset($settings['linked_field']['text']) ? $settings['linked_field']['text'] : '';
+  $settings['linked_field']['title'] = isset($settings['linked_field']['advanced']['title']) ? $settings['linked_field']['advanced']['title'] : '';
+  $settings['linked_field']['target'] = isset($settings['linked_field']['advanced']['target']) ? $settings['linked_field']['advanced']['target'] : '';
+  $settings['linked_field']['class'] = isset($settings['linked_field']['advanced']['class']) ? $settings['linked_field']['advanced']['class'] : '';
+  $settings['linked_field']['rel'] = isset($settings['linked_field']['advanced']['rel']) ? $settings['linked_field']['advanced']['rel'] : '';
+  $settings['linked_field']['text'] = isset($settings['linked_field']['advanced']['text']) ? $settings['linked_field']['advanced']['text'] : '';
 
   $settings_form['linked_field'] = array(
     '#type' => 'container',
@@ -131,25 +143,32 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
   $settings_form['linked_field']['advanced']['title'] = array(
     '#title' => t('Title'),
     '#type' => 'textfield',
-    '#default_value' => $settings['linked_field']['title'],
+    '#default_value' => $settings['linked_field']['advanced']['title'],
     '#description' => t('Here you can enter a token which will be used as link <em>title</em> attribute.'),
   );
 
   $settings_form['linked_field']['advanced']['target'] = array(
     '#title' => t('Target'),
     '#type' => 'textfield',
-    '#default_value' => $settings['linked_field']['target'],
+    '#default_value' => $settings['linked_field']['advanced']['target'],
     '#description' => t('Here you can enter a token which will be used as link <em>target</em> attribute..'),
   );
 
-  $settings_form['linked_field']['advanced']['rel'] = array(
+  $settings_form['linked_field']['advanced']['class'] = array(
+    '#title' => t('Class'),
+    '#type' => 'textfield',
+    '#default_value' => $settings['linked_field']['advanced']['rel'],
+    '#description' => t('Here you can enter a token which will be used as link <em>class</em> attribute.'),
+  );
+
+  $settings_form['linked_field']['advanced']['advanced']['rel'] = array(
     '#title' => t('Relationship'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['rel'],
     '#description' => t('Here you can enter a token which will be used as link <em>rel</em> attribute.'),
   );
 
-  $settings_form['linked_field']['advanced']['text'] = array(
+  $settings_form['linked_field']['advanced']['advanced']['text'] = array(
     '#title' => t('Text'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['text'],
@@ -165,6 +184,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
       ),
     ),
   );
+
 }
 
 /**
@@ -173,6 +193,11 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
 function linked_field_field_attach_view_alter(&$output, $context) {
   foreach (element_children($output) as $field_name) {
     $element = $output[$field_name];
+    $view_modes = field_view_mode_settings($element['#entity_type'], $element['#bundle']);
+    if (isset($view_modes[$context['view_mode']]) && !$view_modes[$context['view_mode']]['custom_settings']) {
+      $context['view_mode'] = 'default';
+    }
+
     $instance = field_info_instance($element['#entity_type'], $field_name, $element['#bundle']);
     $display = isset($instance['display'][$context['view_mode']]) ? $instance['display'][$context['view_mode']] : $instance['display']['default'];
     $settings = $display['settings'];
@@ -185,10 +210,11 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     // Normalize the settings.
     $linked = $settings['linked_field']['linked'];
     $destination = $settings['linked_field']['destination'];
-    $title = (isset($settings['linked_field']['title'])) ? $settings['linked_field']['title'] : '';
-    $target = (isset($settings['linked_field']['target'])) ? $settings['linked_field']['target'] : '';
-    $rel = (isset($settings['linked_field']['rel'])) ? $settings['linked_field']['rel'] : '';
-    $text = (isset($settings['linked_field']['text'])) ? $settings['linked_field']['text'] : '';
+    $title = isset($settings['linked_field']['advanced']['title']) ? $settings['linked_field']['advanced']['title'] : '';
+    $target = isset($settings['linked_field']['advanced']['target']) ? $settings['linked_field']['advanced']['target'] : '';
+    $class = isset($settings['linked_field']['advanced']['class']) ? $settings['linked_field']['advanced']['class'] : '';
+    $rel = isset($settings['linked_field']['advanced']['rel']) ? $settings['linked_field']['advanced']['rel'] : '';
+    $text = isset($settings['linked_field']['advanced']['text']) ? $settings['linked_field']['advanced']['text'] : '';
 
     // If the destination field isn't filled for this field, we shouldn't
     // do anything. Continue to the next field.
@@ -200,6 +226,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     $path = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
     $title = token_replace($title, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
     $target = token_replace($target, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
+    $class = token_replace($class, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
     $rel = token_replace($rel, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
     $text = token_replace($text, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
 
@@ -212,6 +239,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
         'href' => $path,
         'title' => $title,
         'target' => $target,
+        'class' => $class,
         'rel' => $rel,
       );
 
@@ -263,7 +291,9 @@ function linked_field_link_field($node, $dom, $attributes) {
 
           // Adding the attributes.
           foreach ($attributes as $name => $value) {
-            $element->setAttribute($name, $value);
+            if ($value) {
+              $element->setAttribute($name, $value);
+            }
           }
 
           // Replace the the original element with the new one.
