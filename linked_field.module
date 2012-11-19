@@ -34,7 +34,8 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   $settings = $display['settings'];
 
   // Break when no linked field settings were found.
-  if (!isset($settings['linked_field'])) {
+  if (!count($settings['linked_field'])) {
+    $summary = ' ';
     return;
   }
 
@@ -55,15 +56,15 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   }
 
   if ($target) {
-    $summary_items[] = t('Target: @target', array('@target' => $target));
+    $summary_items[] = t('Target: <code>@target</code>', array('@target' => $target));
   }
 
   if ($class) {
-    $summary_items[] = t('Class: @class', array('@class' => $class));
+    $summary_items[] = t('Class: <code>@class</code>', array('@class' => $class));
   }
 
   if ($rel) {
-    $summary_items[] = t('Relationship: @rel', array('@rel' => $rel));
+    $summary_items[] = t('Relationship: <code>@rel</code>', array('@rel' => $rel));
   }
 
   if ($text) {
@@ -86,11 +87,6 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
   $entity_type = $context['instance']['entity_type'];
   $display = $context['instance']['display'][$context['view_mode']];
   $settings = $display['settings'];
-
-  // Break when no linked field settings were found.
-  if (!isset($settings['linked_field'])) {
-    return;
-  }
 
   $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : 0;
   $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
@@ -161,14 +157,14 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#description' => t('Here you can enter a token which will be used as link <em>class</em> attribute.'),
   );
 
-  $settings_form['linked_field']['advanced']['advanced']['rel'] = array(
+  $settings_form['linked_field']['advanced']['rel'] = array(
     '#title' => t('Relationship'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['rel'],
     '#description' => t('Here you can enter a token which will be used as link <em>rel</em> attribute.'),
   );
 
-  $settings_form['linked_field']['advanced']['advanced']['text'] = array(
+  $settings_form['linked_field']['advanced']['text'] = array(
     '#title' => t('Text'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['text'],

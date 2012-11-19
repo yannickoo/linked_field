@@ -6,11 +6,77 @@
  */
 
 /**
+ * Implements hook_uninstall().
+ */
+function linked_field_uninstall() {
+  // We have to remove all Linked Field settings from the fields.
+  linked_field_field_settings('delete');
+}
+
+/**
  * Update module weight to run at last.
  */
 function linked_field_update_7001(&$sandbox) {
+  // We have to change the weight so we run at last.
   db_update('system')
     ->fields(array('weight' => '100'))
     ->condition('name', 'linked_field')
     ->execute();
+}
+
+function linked_field_update_7002(&$sandbox) {
+  // We have to move all advanced Linked Field settings
+  // into the 'advanced' array.
+  linked_field_field_settings('move');
+}
+
+/**
+ * Helper function which changes the field settings from all linked fields.
+ *
+ * @param string $action
+ *   The action to perform.
+ *     - 'move' moves the advanced Linked Field settings into
+ *       the 'advanced' array. This is necessary for update from 1.4 to 1.5.
+ *     - 'delete' deletes all Linked Field settings. This is used for the
+ *       uninstall of this module.
+ */
+function linked_field_field_settings($action) {
+  // Getting all fields.
+  $fields = field_info_fields();
+  $settings = array();
+
+  // We iterate all fields and collect them
+  // with their entity type and and all bundles.
+  foreach ($fields as $field) {
+    foreach ($field['bundles'] as $entity => $bundles) {
+      foreach ($bundles as $bundle) {
+        $settings[] = array('field_name' => $field['field_name'], 'entity' => $entity, 'bundle' => $bundle);
+      }
+    }
+  }
+
+  // Now we iterate the collected fields and get the instance
+  // and update the settings.
+  foreach ($settings as $setting) {
+    $instance = field_info_instance($setting['entity'], $setting['field_name'], $setting['bundle']);
+    foreach ($instance['display'] as &$display) {
+      $settings = &$display['settings'];
+      if (isset($settings['linked_field']) && count($settings['linked_field'])) {
+        foreach ($settings['linked_field'] as $name => $value) {
+          if ($action == 'move') {
+            if ($name != 'linked' && $name != 'destination' && $name != 'advanced') {
+              // We move the setting into the 'advanced' array.
+              $settings['linked_field']['advanced'][$name] = $value;
+              unset($settings['linked_field'][$name]);
+            }
+          }
+          elseif ($action == 'delete') {
+            // Removing the whole Linked Field settings.
+            unset($settings['linked_field']);
+          }
+        }
+      }
+    }
+    field_update_instance($instance);
+  }
 }
