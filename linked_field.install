@@ -33,7 +33,7 @@ function linked_field_update_7002(&$sandbox) {
 /**
  * Helper function which changes the field settings from all linked fields.
  *
- * @param string $action
+ * @param string $action
  *   The action to perform.
  *     - 'move' moves the advanced Linked Field settings into
  *       the 'advanced' array. This is necessary for update from 1.4 to 1.5.
