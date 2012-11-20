@@ -64,19 +64,19 @@ function linked_field_field_settings($action) {
     $instance = field_info_instance($setting['entity'], $setting['field_name'], $setting['bundle']);
     foreach ($instance['display'] as &$display) {
       $settings = &$display['settings'];
-      if (isset($settings['linked_field']) && count($settings['linked_field'])) {
-        foreach ($settings['linked_field'] as $name => $value) {
-          if ($action == 'move') {
+      if (isset($settings['linked_field'])) {
+        if ($action == 'move') {
+          foreach ($settings['linked_field'] as $name => $value) {
             if ($name != 'linked' && $name != 'destination' && $name != 'advanced') {
               // We move the setting into the 'advanced' array.
               $settings['linked_field']['advanced'][$name] = $value;
               unset($settings['linked_field'][$name]);
             }
           }
-          elseif ($action == 'delete') {
-            // Removing the whole Linked Field settings.
-            unset($settings['linked_field']);
-          }
+        }
+        elseif ($action == 'delete') {
+          // Removing the whole Linked Field settings.
+          unset($settings['linked_field']);
         }
       }
     }
