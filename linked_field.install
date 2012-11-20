@@ -10,7 +10,7 @@
  */
 function linked_field_uninstall() {
   // We have to remove all Linked Field settings from the fields.
-  linked_field_field_settings('delete');
+  linked_field_field_settings('uninstall');
 }
 
 /**
@@ -30,7 +30,7 @@ function linked_field_update_7001(&$sandbox) {
 function linked_field_update_7002(&$sandbox) {
   // We have to move all advanced Linked Field settings
   // into the 'advanced' array.
-  linked_field_field_settings('move');
+  linked_field_field_settings('7002');
 }
 
 /**
@@ -38,9 +38,9 @@ function linked_field_update_7002(&$sandbox) {
  *
  * @param string $action
  *   The action to perform.
- *     - 'move' moves the advanced Linked Field settings into
- *       the 'advanced' array. This is necessary for update from 1.4 to 1.5.
- *     - 'delete' deletes all Linked Field settings. This is used for the
+ *     - '7002' moves the advanced Linked Field settings into
+ *       the 'advanced' array. This is necessary for the second update.
+ *     - 'uninstall' deletes all Linked Field settings. This is used for the
  *       uninstall of this module.
  */
 function linked_field_field_settings($action) {
@@ -65,7 +65,7 @@ function linked_field_field_settings($action) {
     foreach ($instance['display'] as &$display) {
       $settings = &$display['settings'];
       if (isset($settings['linked_field'])) {
-        if ($action == 'move') {
+        if ($action == '7002') {
           foreach ($settings['linked_field'] as $name => $value) {
             if ($name != 'linked' && $name != 'destination' && $name != 'advanced') {
               // We move the setting into the 'advanced' array.
@@ -74,7 +74,7 @@ function linked_field_field_settings($action) {
             }
           }
         }
-        elseif ($action == 'delete') {
+        elseif ($action == 'uninstall') {
           // Removing the whole Linked Field settings.
           unset($settings['linked_field']);
         }
