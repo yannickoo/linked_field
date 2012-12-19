@@ -34,7 +34,7 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   $settings = $display['settings'];
 
   // Break when no linked field settings were found.
-  if (!count($settings['linked_field']) || !$settings['linked_field']['linked']) {
+  if (!isset($settings['linked_field']) || !count($settings['linked_field']) || !$settings['linked_field']['linked']) {
     // We have to put something in the summary so that we can ever
     // set Linked Field settings.
     $summary .= ' ';
@@ -201,7 +201,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     $settings = $display['settings'];
 
     // Continue when no linked field settings were found.
-    if (!count($settings['linked_field']) || !$settings['linked_field']['linked']) {
+    if (!isset($settings['linked_field']) || !count($settings['linked_field']) || !$settings['linked_field']['linked']) {
       continue;
     }
 
@@ -284,12 +284,16 @@ function linked_field_link_field($node, $dom, $attributes) {
       if ($child->nodeType == XML_TEXT_NODE) {
         $text = $child->textContent;
         if (strlen(trim($text))) {
+          // Convert all applicable characters to HTML entities.
+          $text = htmlentities($text);
           // Create new <a> element, set the text and the href attribute.
           $element = $dom->createElement('a', $text);
 
           // Adding the attributes.
           foreach ($attributes as $name => $value) {
             if ($value) {
+              // Convert all HTML entities back to their applicable characters.
+              $value = html_entity_decode($value);
               $element->setAttribute($name, $value);
             }
           }
@@ -304,7 +308,11 @@ function linked_field_link_field($node, $dom, $attributes) {
 
         // Adding the attributes.
         foreach ($attributes as $name => $value) {
-          $element->setAttribute($name, $value);
+          if ($value) {
+            // Convert all HTML entities back to their applicable characters.
+            $value = html_entity_decode($value);
+            $element->setAttribute($name, $value);
+          }
         }
 
         $node->replaceChild($element, $child);
