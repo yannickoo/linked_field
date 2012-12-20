@@ -61,7 +61,7 @@ function linked_field_update_7001(&$sandbox) {
  * Update field settings.
  */
 function linked_field_update_7002(&$sandbox) {
-    // Getting all fields.
+  // Getting all fields.
   $field_info = field_info_fields();
   $fields = array();
 
