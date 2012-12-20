@@ -7,10 +7,43 @@
 
 /**
  * Implements hook_uninstall().
+ *
+ * We have to remove Linked Field settings from all fields.
  */
 function linked_field_uninstall() {
-  // We have to remove all Linked Field settings from the fields.
-  linked_field_field_settings('uninstall');
+  // Getting all fields.
+  $field_info = field_info_fields();
+  $fields = array();
+
+  // We iterate all fields and collect them
+  // with their entity type and and all bundles.
+  foreach ($field_info as $field) {
+    foreach ($field['bundles'] as $entity => $bundles) {
+      foreach ($bundles as $bundle) {
+        $fields[] = array(
+          'field_name' => $field['field_name'],
+          'entity' => $entity,
+          'bundle' => $bundle,
+        );
+      }
+    }
+  }
+
+  // Iteare all collected fields.
+  foreach ($fields as $field) {
+    // Getting field instance and modify the settings.
+    $instance = field_info_instance($field['entity'], $field['field_name'], $field['bundle']);
+    foreach ($instance['display'] as &$display) {
+      $settings = &$display['settings'];
+      if (isset($settings['linked_field'])) {
+        // Removing the whole Linked Field settings.
+        unset($settings['linked_field']);
+      }
+
+      // Finally we update the current field instance.
+      field_update_instance($instance);
+    }
+  }
 }
 
 /**
@@ -28,32 +61,16 @@ function linked_field_update_7001(&$sandbox) {
  * Update field settings.
  */
 function linked_field_update_7002(&$sandbox) {
-  // We have to move all advanced Linked Field settings
-  // into the 'advanced' array.
-  linked_field_field_settings('7002');
-}
-
-/**
- * Helper function which changes the field settings from all linked fields.
- *
- * @param string $action
- *   The action to perform.
- *     - '7002' moves the advanced Linked Field settings into
- *       the 'advanced' array. This is necessary for the second update.
- *     - 'uninstall' deletes all Linked Field settings. This is used for the
- *       uninstall of this module.
- */
-function linked_field_field_settings($action) {
-  // Getting all fields.
-  $fields = field_info_fields();
-  $settings = array();
+    // Getting all fields.
+  $field_info = field_info_fields();
+  $fields = array();
 
   // We iterate all fields and collect them
   // with their entity type and and all bundles.
-  foreach ($fields as $field) {
+  foreach ($field_info as $field) {
     foreach ($field['bundles'] as $entity => $bundles) {
       foreach ($bundles as $bundle) {
-        $settings[] = array(
+        $fields[] = array(
           'field_name' => $field['field_name'],
           'entity' => $entity,
           'bundle' => $bundle,
@@ -62,28 +79,38 @@ function linked_field_field_settings($action) {
     }
   }
 
-  // Now we iterate the collected fields and get the instance
-  // and update the settings.
-  foreach ($settings as $setting) {
-    $instance = field_info_instance($setting['entity'], $setting['field_name'], $setting['bundle']);
-    foreach ($instance['display'] as &$display) {
-      $settings = &$display['settings'];
-      if (isset($settings['linked_field'])) {
-        if ($action == '7002') {
-          foreach ($settings['linked_field'] as $name => $value) {
-            if ($name != 'linked' && $name != 'destination' && $name != 'advanced') {
-              // We move the setting into the 'advanced' array.
-              $settings['linked_field']['advanced'][$name] = $value;
-              unset($settings['linked_field'][$name]);
-            }
-          }
-        }
-        elseif ($action == 'uninstall') {
-          // Removing the whole Linked Field settings.
-          unset($settings['linked_field']);
+  // We initialize the Batch process.
+  if (!isset($sandbox['progress'])) {
+    $sandbox['progress'] = 0;
+    $sandbox['current_field'] = 0;
+    $sandbox['max'] = count($fields);
+  }
+
+  // Getting current setting.
+  $field = $fields[$sandbox['current_field']];
+
+  // Getting field instance and modify the settings.
+  $instance = field_info_instance($field['entity'], $field['field_name'], $field['bundle']);
+  foreach ($instance['display'] as &$display) {
+    $settings = &$display['settings'];
+    if (isset($settings['linked_field'])) {
+      foreach ($settings['linked_field'] as $name => $value) {
+        if ($name != 'linked' && $name != 'destination' && $name != 'advanced') {
+          // We move the setting into the 'advanced' array.
+          $settings['linked_field']['advanced'][$name] = $value;
+          unset($settings['linked_field'][$name]);
         }
       }
     }
-    field_update_instance($instance);
   }
+
+  // Finally we update the current field instance.
+  field_update_instance($instance);
+
+  // Prepeare the values for the next step.
+  $sandbox['progress']++;
+  $sandbox['current_field']++;
+
+  // Update process is finished when all settings have been ran.
+  $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
 }
