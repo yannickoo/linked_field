@@ -192,12 +192,27 @@ function linked_field_field_attach_view_alter(&$output, $context) {
   foreach (element_children($output) as $field_name) {
     $element = $output[$field_name];
     $view_modes = field_view_mode_settings($element['#entity_type'], $element['#bundle']);
+
+    // Check whether set view mode has custom settings.
     if (isset($view_modes[$context['view_mode']]) && !$view_modes[$context['view_mode']]['custom_settings']) {
       $context['view_mode'] = 'default';
     }
 
     $instance = field_info_instance($element['#entity_type'], $field_name, $element['#bundle']);
-    $display = isset($instance['display'][$context['view_mode']]) ? $instance['display'][$context['view_mode']] : $instance['display']['default'];
+
+    // Check whether view mode exists in the field instance.
+    if (isset($instance['display'][$context['view_mode']])) {
+      $display = $instance['display'][$context['view_mode']];
+    }
+    // Views sets the view mode to '_custom'.
+    elseif ($context['view_mode'] == '_custom') {
+      $display = $context['display'];
+    }
+    // Otherwise we use the 'default' view mode.
+    else {
+      $display = $instance['display']['default'];
+    }
+
     $settings = $display['settings'];
 
     // Continue when no linked field settings were found.
