@@ -58,7 +58,7 @@ function linked_field_update_7001(&$sandbox) {
 }
 
 /**
- * Update field settings.
+ * Update fields which contain Linked Field settings.
  */
 function linked_field_update_7002(&$sandbox) {
   // Getting all fields.
@@ -116,7 +116,7 @@ function linked_field_update_7002(&$sandbox) {
 }
 
 /**
- * Update view settings.
+ * Update views which contain Linked Field settings.
  */
 function linked_field_update_7003(&$sandbox) {
   if (db_table_exists('views_display')) {
