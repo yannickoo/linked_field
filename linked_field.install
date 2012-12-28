@@ -8,7 +8,7 @@
 /**
  * Implements hook_uninstall().
  *
- * We have to remove Linked Field settings from all fields.
+ * We have to remove Linked Field settings from all fields and views.
  */
 function linked_field_uninstall() {
   // Getting all fields.
@@ -42,6 +42,37 @@ function linked_field_uninstall() {
 
       // Finally we update the current field instance.
       field_update_instance($instance);
+    }
+  }
+
+  if (db_table_exists('views_display')) {
+    // Getting all view displays from database.
+    $view_displays = db_select('views_display', 'vd')
+      ->fields('vd')
+      ->execute();
+
+    // Iterate all view displays and modify them.
+    foreach ($view_displays as $view_display) {
+      $vid = $view_display->vid;
+      $id = $view_display->id;
+      $display_options = unserialize($view_display->display_options);
+
+      if (isset($display_options['fields'])) {
+        foreach ($display_options['fields'] as &$field) {
+          $settings = &$field['settings'];
+          if (isset($settings['linked_field'])) {
+            unset($settings['linked_field']);
+          }
+        }
+      }
+
+      $display_options = serialize($display_options);
+
+      db_update('views_display')
+        ->fields(array('display_options' => $display_options))
+        ->condition('vid', $vid)
+        ->condition('id', $id)
+        ->execute();
     }
   }
 }
@@ -137,7 +168,7 @@ function linked_field_update_7003(&$sandbox) {
       $sandbox['max'] = $view_displays_count;
     }
 
-    // Iterate all view displays and modify
+    // Iterate all view displays and modify them.
     foreach ($view_displays as $view_display) {
       $vid = $view_display->vid;
       $id = $view_display->id;
@@ -147,7 +178,6 @@ function linked_field_update_7003(&$sandbox) {
         foreach ($display_options['fields'] as &$field) {
           $settings = &$field['settings'];
           if (isset($settings['linked_field'])) {
-            $settings['linked_field']['foo'] = 'bar';
             foreach ($settings['linked_field'] as $name => $value) {
               if ($name != 'linked' && $name != 'destination' && $name != 'advanced') {
                 // We move the setting into the 'advanced' array.
