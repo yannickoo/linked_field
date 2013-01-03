@@ -15,33 +15,34 @@ function linked_field_uninstall() {
   $field_info = field_info_fields();
   $fields = array();
 
-  // We iterate all fields and collect them
-  // with their entity type and and all bundles.
   foreach ($field_info as $field) {
-    foreach ($field['bundles'] as $entity => $bundles) {
+    foreach ($field['bundles'] as $entity_type => $bundles) {
       foreach ($bundles as $bundle) {
-        $fields[] = array(
-          'field_name' => $field['field_name'],
-          'entity' => $entity,
-          'bundle' => $bundle,
-        );
-      }
-    }
-  }
+        // Getting field instance and modify the settings.
+        $instance = db_select('field_config_instance', 'fci')
+          ->fields('fci', array('data'))
+          ->condition('field_name', $field['field_name'])
+          ->condition('entity_type', $entity_type)
+          ->condition('bundle', $bundle)
+          ->execute()
+          ->fetchField();
 
-  // Iteare all collected fields.
-  foreach ($fields as $field) {
-    // Getting field instance and modify the settings.
-    $instance = field_info_instance($field['entity'], $field['field_name'], $field['bundle']);
-    foreach ($instance['display'] as &$display) {
-      $settings = &$display['settings'];
-      if (isset($settings['linked_field'])) {
-        // Removing the whole Linked Field settings.
-        unset($settings['linked_field']);
-      }
+        $instance = unserialize($instance);
 
-      // Finally we update the current field instance.
-      field_update_instance($instance);
+        foreach ($instance['display'] as &$display) {
+          unset($display['settings']['linked_field']);
+        }
+
+        $instance = serialize($instance);
+
+        // Finally we update the current field instance.
+        db_update('field_config_instance')
+          ->fields(array('data' => $instance))
+          ->condition('field_name', $field['field_name'])
+          ->condition('entity_type', $entity_type)
+          ->condition('bundle', $bundle)
+          ->execute();
+      }
     }
   }
 
@@ -68,6 +69,7 @@ function linked_field_uninstall() {
 
       $display_options = serialize($display_options);
 
+      // Finally we update the current view display.
       db_update('views_display')
         ->fields(array('display_options' => $display_options))
         ->condition('vid', $vid)
@@ -99,11 +101,11 @@ function linked_field_update_7002(&$sandbox) {
   // We iterate all fields and collect them
   // with their entity type and and all bundles.
   foreach ($field_info as $field) {
-    foreach ($field['bundles'] as $entity => $bundles) {
+    foreach ($field['bundles'] as $entity_type => $bundles) {
       foreach ($bundles as $bundle) {
         $fields[] = array(
           'field_name' => $field['field_name'],
-          'entity' => $entity,
+          'entity_type' => $entity_type,
           'bundle' => $bundle,
         );
       }
@@ -121,7 +123,15 @@ function linked_field_update_7002(&$sandbox) {
   $field = $fields[$sandbox['current_field']];
 
   // Getting field instance and modify the settings.
-  $instance = field_info_instance($field['entity'], $field['field_name'], $field['bundle']);
+  $instance = db_select('field_config_instance', 'fci')
+    ->fields('fci', array('data'))
+    ->condition('field_name', $field['field_name'])
+    ->condition('entity_type', $entity_type)
+    ->condition('bundle', $bundle)
+    ->execute()
+    ->fetchField();
+
+  $instance = unserialize($instance);
   foreach ($instance['display'] as &$display) {
     $settings = &$display['settings'];
     if (isset($settings['linked_field'])) {
@@ -135,8 +145,15 @@ function linked_field_update_7002(&$sandbox) {
     }
   }
 
+  $instance = serialize($instance);
+
   // Finally we update the current field instance.
-  field_update_instance($instance);
+  db_update('field_config_instance')
+    ->fields(array('data' => $instance))
+    ->condition('field_name', $field['field_name'])
+    ->condition('entity_type', $entity_type)
+    ->condition('bundle', $bundle)
+    ->execute();
 
   // Prepeare the values for the next step.
   $sandbox['progress']++;
@@ -191,6 +208,7 @@ function linked_field_update_7003(&$sandbox) {
 
       $display_options = serialize($display_options);
 
+      // Finally we update the current view display.
       db_update('views_display')
         ->fields(array('display_options' => $display_options))
         ->condition('vid', $vid)

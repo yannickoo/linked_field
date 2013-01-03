@@ -2,8 +2,7 @@
 
 /**
  * @file
- * Module that gives you a field formatter, which enables you to link field
- * contents to a destination.
+ * Main file of Linked Field module.
  */
 
 /**
@@ -16,6 +15,7 @@ function linked_field_field_formatter_info_alter(&$infos) {
         'linked' => 0,
         'destination' => '',
         'advanced' => array(
+          'title' => '',
           'target' => '',
           'class' => '',
           'rel' => '',
@@ -34,7 +34,7 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   $settings = $display['settings'];
 
   // Break when no linked field settings were found.
-  if (!isset($settings['linked_field']) || !count($settings['linked_field']) || !$settings['linked_field']['linked']) {
+  if (!isset($settings['linked_field'])) {
     // We have to put something in the summary so that we can ever
     // set Linked Field settings.
     $summary .= ' ';
@@ -44,11 +44,11 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   // Normalize the settings.
   $linked = $settings['linked_field']['linked'];
   $destination = $settings['linked_field']['destination'];
-  $title = isset($settings['linked_field']['advanced']['title']) ? $settings['linked_field']['advanced']['title'] : '';
-  $target = isset($settings['linked_field']['advanced']['target']) ? $settings['linked_field']['advanced']['target'] : '';
-  $class = isset($settings['linked_field']['advanced']['class']) ? $settings['linked_field']['advanced']['class'] : '';
-  $rel = isset($settings['linked_field']['advanced']['rel']) ? $settings['linked_field']['advanced']['rel'] : '';
-  $text = isset($settings['linked_field']['advanced']['text']) ? $settings['linked_field']['advanced']['text'] : '';
+  $title = $settings['linked_field']['advanced']['title'];
+  $target = $settings['linked_field']['advanced']['target'];
+  $class = $settings['linked_field']['advanced']['class'];
+  $rel = $settings['linked_field']['advanced']['rel'];
+  $text = $settings['linked_field']['advanced']['text'];
 
   $summary_items = array();
   $summary_items[] = t('Destination: @destination', array('@destination' => $destination));
@@ -89,14 +89,6 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
   $entity_type = $context['instance']['entity_type'];
   $display = $context['instance']['display'][$context['view_mode']];
   $settings = $display['settings'];
-
-  $settings['linked_field']['linked'] = isset($settings['linked_field']['linked']) ? $settings['linked_field']['linked'] : 0;
-  $settings['linked_field']['destination'] = isset($settings['linked_field']['destination']) ? $settings['linked_field']['destination'] : '';
-  $settings['linked_field']['title'] = isset($settings['linked_field']['advanced']['title']) ? $settings['linked_field']['advanced']['title'] : '';
-  $settings['linked_field']['target'] = isset($settings['linked_field']['advanced']['target']) ? $settings['linked_field']['advanced']['target'] : '';
-  $settings['linked_field']['class'] = isset($settings['linked_field']['advanced']['class']) ? $settings['linked_field']['advanced']['class'] : '';
-  $settings['linked_field']['rel'] = isset($settings['linked_field']['advanced']['rel']) ? $settings['linked_field']['advanced']['rel'] : '';
-  $settings['linked_field']['text'] = isset($settings['linked_field']['advanced']['text']) ? $settings['linked_field']['advanced']['text'] : '';
 
   $settings_form['linked_field'] = array(
     '#type' => 'container',
@@ -204,8 +196,9 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     if (isset($instance['display'][$context['view_mode']])) {
       $display = $instance['display'][$context['view_mode']];
     }
-    // Views sets the view mode to '_custom'.
-    elseif ($context['view_mode'] == '_custom') {
+    // If no view mode was specified it should be set to '_custom'
+    // like in field_view_field().
+    elseif ($context['view_mode'] == '_custom' && is_array($context['display'])) {
       $display = $context['display'];
     }
     // Otherwise we use the 'default' view mode.
@@ -215,19 +208,14 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
     $settings = $display['settings'];
 
-    // Continue when no linked field settings were found.
-    if (!isset($settings['linked_field']) || !count($settings['linked_field']) || !$settings['linked_field']['linked']) {
-      continue;
-    }
-
     // Normalize the settings.
     $linked = $settings['linked_field']['linked'];
     $destination = $settings['linked_field']['destination'];
-    $title = isset($settings['linked_field']['advanced']['title']) ? $settings['linked_field']['advanced']['title'] : '';
-    $target = isset($settings['linked_field']['advanced']['target']) ? $settings['linked_field']['advanced']['target'] : '';
-    $class = isset($settings['linked_field']['advanced']['class']) ? $settings['linked_field']['advanced']['class'] : '';
-    $rel = isset($settings['linked_field']['advanced']['rel']) ? $settings['linked_field']['advanced']['rel'] : '';
-    $text = isset($settings['linked_field']['advanced']['text']) ? $settings['linked_field']['advanced']['text'] : '';
+    $title = $settings['linked_field']['advanced']['title'];
+    $target = $settings['linked_field']['advanced']['target'];
+    $class = $settings['linked_field']['advanced']['class'];
+    $rel = $settings['linked_field']['advanced']['rel'];
+    $text = $settings['linked_field']['advanced']['text'];
 
     // If the destination field isn't filled for this field, we shouldn't
     // do anything. Continue to the next field.
