@@ -46,6 +46,9 @@ function linked_field_uninstall() {
     }
   }
 
+  // Clear caches.
+  field_cache_clear();
+
   if (db_table_exists('views_display')) {
     // Getting all view displays from database.
     $view_displays = db_select('views_display', 'vd')
@@ -132,9 +135,11 @@ function linked_field_update_7002(&$sandbox) {
     ->fetchField();
 
   $instance = unserialize($instance);
+
   foreach ($instance['display'] as &$display) {
     $settings = &$display['settings'];
-    if (isset($settings['linked_field'])) {
+    // Modify settings if 'advanced' array doesn't exist.
+    if (isset($settings['linked_field']) && !isset($settings['linked_field']['advanced'])) {
       foreach ($settings['linked_field'] as $name => $value) {
         if ($name != 'linked' && $name != 'destination' && $name != 'advanced') {
           // We move the setting into the 'advanced' array.
@@ -161,6 +166,9 @@ function linked_field_update_7002(&$sandbox) {
 
   // Update process is finished when all settings have been ran.
   $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
+
+  // Clear caches if all fields are processed.
+  field_cache_clear();
 }
 
 /**
