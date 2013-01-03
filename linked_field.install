@@ -168,7 +168,9 @@ function linked_field_update_7002(&$sandbox) {
   $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
 
   // Clear caches if all fields are processed.
-  field_cache_clear();
+  if (intval($sandbox['#finished'])) {
+    field_cache_clear();
+  }
 }
 
 /**
