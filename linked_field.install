@@ -283,9 +283,9 @@ function linked_field_update_7004(&$sandbox) {
     // Iterate some settings from 'advanced' array.
     if (isset($settings['linked_field'])) {
       foreach (array('class', 'title') as $setting) {
-       if (!isset($settings['linked_field']['advanced'][$setting])) {
-         $settings['linked_field']['advanced'][$setting] = '';
-       }
+        if (!isset($settings['linked_field']['advanced'][$setting])) {
+          $settings['linked_field']['advanced'][$setting] = '';
+        }
       }
     }
   }
