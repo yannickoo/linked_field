@@ -129,8 +129,8 @@ function linked_field_update_7002(&$sandbox) {
   $instance = db_select('field_config_instance', 'fci')
     ->fields('fci', array('data'))
     ->condition('field_name', $field['field_name'])
-    ->condition('entity_type', $entity_type)
-    ->condition('bundle', $bundle)
+    ->condition('entity_type', $field['entity_type'])
+    ->condition('bundle', $field['bundle'])
     ->execute()
     ->fetchField();
 
@@ -156,8 +156,8 @@ function linked_field_update_7002(&$sandbox) {
   db_update('field_config_instance')
     ->fields(array('data' => $instance))
     ->condition('field_name', $field['field_name'])
-    ->condition('entity_type', $entity_type)
-    ->condition('bundle', $bundle)
+    ->condition('entity_type', $field['entity_type'])
+    ->condition('bundle', $field['bundle'])
     ->execute();
 
   // Prepeare the values for the next step.
@@ -232,5 +232,82 @@ function linked_field_update_7003(&$sandbox) {
       // Update process is finished when all settings have been ran.
       $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
     }
+  }
+}
+
+/**
+ * Add some settings if they don't exist already.
+ */
+function linked_field_update_7004(&$sandbox) {
+  // Getting all fields.
+  $field_info = field_info_fields();
+  $fields = array();
+
+  // We iterate all fields and collect them
+  // with their entity type and and all bundles.
+  foreach ($field_info as $field) {
+    foreach ($field['bundles'] as $entity_type => $bundles) {
+      foreach ($bundles as $bundle) {
+        $fields[] = array(
+          'field_name' => $field['field_name'],
+          'entity_type' => $entity_type,
+          'bundle' => $bundle,
+        );
+      }
+    }
+  }
+
+  // We initialize the batch process.
+  if (!isset($sandbox['progress'])) {
+    $sandbox['progress'] = 0;
+    $sandbox['current_field'] = 0;
+    $sandbox['max'] = count($fields);
+  }
+
+  // Getting current setting.
+  $field = $fields[$sandbox['current_field']];
+
+  // Getting field instance and modify the settings.
+  $instance = db_select('field_config_instance', 'fci')
+    ->fields('fci', array('data'))
+    ->condition('field_name', $field['field_name'])
+    ->condition('entity_type', $field['entity_type'])
+    ->condition('bundle', $field['bundle'])
+    ->execute()
+    ->fetchField();
+
+  $instance = unserialize($instance);
+
+  foreach ($instance['display'] as &$display) {
+    $settings = &$display['settings'];
+    // Iterate all settings from 'advanced' array.
+    foreach (array('title', 'target', 'class', 'rel', 'text') as $setting) {
+      if (!isset($settings['linked_field']['advanced'][$setting])) {
+        // We add it.
+        $settings['linked_field']['advanced'][$setting] = '';
+      }
+    }
+  }
+
+  $instance = serialize($instance);
+
+  // Finally we update the current field instance.
+  db_update('field_config_instance')
+    ->fields(array('data' => $instance))
+    ->condition('field_name', $field['field_name'])
+    ->condition('entity_type', $field['entity_type'])
+    ->condition('bundle', $field['bundle'])
+    ->execute();
+
+  // Prepeare the values for the next step.
+  $sandbox['progress']++;
+  $sandbox['current_field']++;
+
+  // Update process is finished when all settings have been ran.
+  $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
+
+  // Clear caches if all fields are processed.
+  if (intval($sandbox['#finished'])) {
+    field_cache_clear();
   }
 }
