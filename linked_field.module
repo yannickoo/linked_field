@@ -224,7 +224,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     }
 
     // Replace tokens and filter the value.
-    $path = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
+    $destination = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
     $title = filter_xss_admin(token_replace($title, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE)));
     $target = check_plain(token_replace($target, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE)));
     $class = check_plain(token_replace($class, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE)));
@@ -233,39 +233,40 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     // inline elements are allowed.
     $text = filter_xss_admin(token_replace($text, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE)));
 
-    if ($path != '') {
-      // Generate a correct link.
-      $path = url($path);
+    // Parse the destination to get queries and fragments working.
+    $destination_parsed = drupal_parse_url($destination);
 
-      // Building the attributes for the link.
-      $attributes = array(
-        'href' => $path,
-        'title' => $title,
-        'target' => $target,
-        'class' => $class,
-        'rel' => $rel,
-      );
+    // Generate a correct link.
+    $path = url($destination_parsed['path'], $destination_parsed);
 
-      foreach (element_children($element) as $delta) {
-        if (!$text) {
-          $rendered = drupal_render($element[$delta]);
-        }
-        else {
-          $rendered = $text;
-        }
-        // Convert HTML code to a DOMDocument object.
-        $html_dom = filter_dom_load($rendered);
-        // Getting the <body> element.
-        $body = $html_dom->getElementsByTagName('body');
-        $nodes = $body->item(0);
+    // Building the attributes for the link.
+    $attributes = array(
+      'href' => $path,
+      'title' => $title,
+      'target' => $target,
+      'class' => $class,
+      'rel' => $rel,
+    );
 
-        // Recursively walk over the DOMDocument body and place the links.
-        linked_field_link_field($nodes, $html_dom, $attributes);
-
-        // Converting the DOMDocument object back to HTML code.
-        $rendered = filter_dom_serialize($html_dom);
-        $output[$field_name][$delta] = array('#markup' => $rendered);
+    foreach (element_children($element) as $delta) {
+      if (!$text) {
+        $rendered = drupal_render($element[$delta]);
       }
+      else {
+        $rendered = $text;
+      }
+      // Convert HTML code to a DOMDocument object.
+      $html_dom = filter_dom_load($rendered);
+      // Getting the <body> element.
+      $body = $html_dom->getElementsByTagName('body');
+      $nodes = $body->item(0);
+
+      // Recursively walk over the DOMDocument body and place the links.
+      linked_field_link_field($nodes, $html_dom, $attributes);
+
+      // Converting the DOMDocument object back to HTML code.
+      $rendered = filter_dom_serialize($html_dom);
+      $output[$field_name][$delta] = array('#markup' => $rendered);
     }
   }
 }
