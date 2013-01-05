@@ -280,9 +280,9 @@ function linked_field_update_7004(&$sandbox) {
 
   foreach ($instance['display'] as &$display) {
     $settings = &$display['settings'];
-    // Iterate some settings from 'advanced' array.
+    // Iterate all settings from 'advanced' array.
     if (isset($settings['linked_field'])) {
-      foreach (array('class', 'title') as $setting) {
+      foreach (array('title', 'target', 'class', 'rel', 'text') as $setting) {
         if (!isset($settings['linked_field']['advanced'][$setting])) {
           $settings['linked_field']['advanced'][$setting] = '';
         }
