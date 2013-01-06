@@ -148,21 +148,21 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
   $settings_form['linked_field']['advanced']['class'] = array(
     '#title' => t('Class'),
     '#type' => 'textfield',
-    '#default_value' => $settings['linked_field']['advanced']['rel'],
+    '#default_value' => $settings['linked_field']['advanced']['class'],
     '#description' => t('Here you can enter a token which will be used as link <em>class</em> attribute.'),
   );
 
   $settings_form['linked_field']['advanced']['rel'] = array(
     '#title' => t('Relationship'),
     '#type' => 'textfield',
-    '#default_value' => $settings['linked_field']['rel'],
+    '#default_value' => $settings['linked_field']['advanced']['rel'],
     '#description' => t('Here you can enter a token which will be used as link <em>rel</em> attribute.'),
   );
 
   $settings_form['linked_field']['advanced']['text'] = array(
     '#title' => t('Text'),
     '#type' => 'textfield',
-    '#default_value' => $settings['linked_field']['text'],
+    '#default_value' => $settings['linked_field']['advanced']['text'],
     '#description' => t('Here you can enter a token which will be used as link text. Note that the actual field output will be overridden.'),
   );
 
