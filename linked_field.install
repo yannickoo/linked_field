@@ -236,7 +236,7 @@ function linked_field_update_7003(&$sandbox) {
 }
 
 /**
- * Add some settings if they don't exist already.
+ * Add some settings to fields if they don't exist already.
  */
 function linked_field_update_7004(&$sandbox) {
   // Getting all fields.
@@ -310,5 +310,69 @@ function linked_field_update_7004(&$sandbox) {
   // Clear caches if all fields are processed.
   if (intval($sandbox['#finished'])) {
     field_cache_clear();
+  }
+}
+
+/**
+ * Add some settings to Views fields if they don't exist already.
+ */
+function linked_field_update_7005(&$sandbox) {
+  if (db_table_exists('views_display')) {
+    // Getting all view displays from database.
+    $view_displays = db_select('views_display', 'vd')
+      ->fields('vd')
+      ->execute();
+
+    $view_displays_count = db_select('views_display', 'vd')
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+
+    // We initialize the batch process.
+    if (!isset($sandbox['progress'])) {
+      $sandbox['progress'] = 0;
+      $sandbox['current_view_display'] = 1;
+      $sandbox['max'] = $view_displays_count;
+    }
+
+    // Iterate all view displays and modify them.
+    foreach ($view_displays as $view_display) {
+      $vid = $view_display->vid;
+      $id = $view_display->id;
+      $display_options = unserialize($view_display->display_options);
+
+      if (isset($display_options['fields'])) {
+        foreach ($display_options['fields'] as &$field) {
+          $settings = &$field['settings'];
+
+          if (isset($settings['linked_field'])) {
+            // Remove 'foo' which was introduced with update 7003 accidentally.
+            unset($settings['linked_field']['foo']);
+            // Iterate all settings from 'advanced' array.
+            foreach (array('title', 'target', 'class', 'rel', 'text') as $setting) {
+              if (!isset($settings['linked_field']['advanced'][$setting])) {
+                $settings['linked_field']['advanced'][$setting] = '';
+              }
+            }
+          }
+        }
+      }
+
+      $display_options = serialize($display_options);
+
+      // Finally we update the current view display.
+      db_update('views_display')
+        ->fields(array('display_options' => $display_options))
+        ->condition('vid', $vid)
+        ->condition('id', $id)
+        ->execute();
+
+      // Prepeare the values for the next step.
+      $sandbox['progress']++;
+      $sandbox['current_view_display']++;
+
+      // Update process is finished when all settings have been ran.
+      $sandbox['#finished'] = $sandbox['progress'] / $sandbox['max'];
+    }
   }
 }
