@@ -314,7 +314,7 @@ function linked_field_update_7004(&$sandbox) {
 }
 
 /**
- * Add some settings to Views fields if they don't exist already.
+ * Add some settings to views fields if they don't exist already.
  */
 function linked_field_update_7005(&$sandbox) {
   if (db_table_exists('views_display')) {
