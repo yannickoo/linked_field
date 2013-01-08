@@ -209,6 +209,11 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
     $settings = $display['settings'];
 
+    // Continue to next if no Linked Field settings were found.
+    if (!isset($settings['linked_field'])) {
+      continue;
+    }
+
     // Normalize the settings.
     $linked = $settings['linked_field']['linked'];
     $destination = $settings['linked_field']['destination'];
