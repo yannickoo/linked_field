@@ -238,13 +238,13 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
     // Replace tokens and filter the value.
     $destination = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
-    $title = filter_xss_admin(token_replace($title, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE)));
-    $target = check_plain(token_replace($target, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE)));
-    $class = check_plain(token_replace($class, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE)));
-    $rel = check_plain(token_replace($rel, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE)));
+    $title = $title ? filter_xss_admin(token_replace($title, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE))) : '';
+    $target = $target ? check_plain(token_replace($target, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE))) : '';
+    $class =  $class ? check_plain(token_replace($class, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE))) : '';
+    $rel = $rel ? check_plain(token_replace($rel, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE))) : '';
     // Would be better to have own set with allowed tags so that only
     // inline elements are allowed.
-    $text = filter_xss_admin(token_replace($text, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE)));
+    $text = $text ? filter_xss_admin(token_replace($text, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE))) : '';
 
     // Parse the destination to get queries and fragments working.
     $destination_parsed = drupal_parse_url($destination);
