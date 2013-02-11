@@ -246,6 +246,11 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     // inline elements are allowed.
     $text = $text ? filter_xss_admin(token_replace($text, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE))) : '';
 
+    // Continue to next field if destination is empty.
+    if (!$destination) {
+      continue;
+    }
+
     // Parse the destination to get queries and fragments working.
     $destination_parsed = drupal_parse_url($destination);
 
