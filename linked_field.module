@@ -294,13 +294,16 @@ function linked_field_field_attach_view_alter(&$output, $context) {
  */
 function linked_field_element_validate_destination($element, &$form_state) {
   $value = $element['#value'];
-  // We can hardcode the key because it is ever the same structure.
-  $field = $element['#array_parents'][1];
-  // Get 'linked' value.
-  $linked = $form_state['values']['fields'][$field]['settings_edit_form']['settings']['linked_field']['linked'];
-  // If this field should be linked, the destination field is required.
-  if ($linked && !$value) {
-    form_error($element, t('!name field is required.', array('!name' => $element['#title'])));
+  // We check whether 'fields' exists in the form_state values.
+  if (isset($form_state['values']['fields'])) {
+    // We can hardcode the key because it is ever the same structure.
+    $field = $element['#array_parents'][1];
+    // Get 'linked' value.
+    $linked = $form_state['values']['fields'][$field]['settings_edit_form']['settings']['linked_field']['linked'];
+    // If this field should be linked, the destination field is required.
+    if ($linked && !$value) {
+      form_error($element, t('!name field is required.', array('!name' => $element['#title'])));
+    }
   }
 }
 
