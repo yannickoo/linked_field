@@ -174,7 +174,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
   $settings_form['linked_field']['token'] = array(
     '#type' => 'container',
     '#theme' => 'token_tree',
-    '#token_types' => array($entity_type),
+    '#token_types' => array($entity_type, 'field-item'),
     '#dialog' => TRUE,
     '#states' => array(
       'visible' => array(
@@ -221,60 +221,85 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       continue;
     }
 
-    // Normalize the settings.
-    $linked = $settings['linked_field']['linked'];
-    // We replace tokens in the destination because it could be possible
-    // that the result is empty.
-    $destination = $settings['linked_field']['destination'];
-    $destination = token_replace($destination, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE));
-    $title = $settings['linked_field']['advanced']['title'];
-    $target = $settings['linked_field']['advanced']['target'];
-    $class = $settings['linked_field']['advanced']['class'];
-    $rel = $settings['linked_field']['advanced']['rel'];
-    $text = $settings['linked_field']['advanced']['text'];
-
-    // If the destination field isn't filled for this field, we shouldn't
-    // do anything. Continue to the next field.
-    if (!$destination || !$linked) {
-      continue;
-    }
-
-    // Replace tokens and filter the value.
-    $title = $title ? filter_xss_admin(token_replace($title, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE))) : '';
-    $target = $target ? check_plain(token_replace($target, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE))) : '';
-    $class = $class ? check_plain(token_replace($class, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE))) : '';
-    $rel = $rel ? check_plain(token_replace($rel, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE))) : '';
-    // Would be better to have own set with allowed tags so that only
-    // inline elements are allowed.
-    $text = $text ? filter_xss_admin(token_replace($text, array($element['#entity_type'] => $element['#object']), array('clear' => TRUE))) : '';
-
-    // Continue to next field if destination is empty.
-    if (!$destination) {
-      continue;
-    }
-
-    // Parse the destination to get queries and fragments working.
-    $destination_parsed = drupal_parse_url($destination);
-
-    // Generate a correct link.
-    $path = url($destination_parsed['path'], $destination_parsed);
-
-    // Building the attributes for the link.
-    $attributes = array(
-      'href' => $path,
-      'title' => $title,
-      'target' => $target,
-      'class' => $class,
-      'rel' => $rel,
-    );
-
+    $field_items = field_get_items($element['#entity_type'], $element['#object'], $field_name, $element['#object']->language);
     foreach (element_children($element) as $delta) {
+      // Normalize the settings.
+      $linked = $settings['linked_field']['linked'];
+      $destination = $settings['linked_field']['destination'];
+      $title = $settings['linked_field']['advanced']['title'];
+      $target = $settings['linked_field']['advanced']['target'];
+      $class = $settings['linked_field']['advanced']['class'];
+      $rel = $settings['linked_field']['advanced']['rel'];
+      $text = $settings['linked_field']['advanced']['text'];
+
+      // If the destination field isn't filled for this field, we shouldn't
+      // do anything. Continue to the next field.
+      if (!$destination || !$linked) {
+        continue;
+      }
+
+      // Get raw value of field.
+      $field_raw_value = array_shift($field_items[$delta]);
+      // Replace tokens and filter the value.
+      $replace_tokens = array(
+        'field-item' => array(
+          'delta' => $delta,
+          'raw' => $field_raw_value,
+        ),
+        $element['#entity_type'] => $element['#object'],
+      );
+
+      /*
+       * Replace all field tokens and then entity tokens. This allows field
+       * tokens to be nested such as [comment:field-tags:[field:delta]:name].
+       */
+      foreach ($replace_tokens as $type => $data) {
+        $replace_token = array($type => $data);
+
+        if ($type == 'field-item') {
+          // The tokens should not be cleared when replacing field for Entity tokens will be cleared.
+          $clear = FALSE;
+        }
+        else {
+          $clear = TRUE;
+        }
+
+        $destination = token_replace($destination, $replace_token, array('clear' => $clear));
+        $title = $title ? filter_xss_admin(token_replace($title, $replace_token, array('clear' => $clear))) : '';
+        $target = $target ? check_plain(token_replace($target, $replace_token, array('clear' => $clear))) : '';
+        $class = $class ? check_plain(token_replace($class, $replace_token, array('clear' => $clear))) : '';
+        $rel = $rel ? check_plain(token_replace($rel, $replace_token, array('clear' => $clear))) : '';
+        // Would be better to have own set with allowed tags so that only
+        // inline elements are allowed.
+        $text = $text ? filter_xss_admin(token_replace($text, $replace_token, array('clear' => $clear))) : '';
+      }
+
+      // Continue to next field if destination is empty.
+      if (!$destination) {
+        continue;
+      }
+
+      // Parse the destination to get queries and fragments working.
+      $destination_parsed = drupal_parse_url($destination);
+
+      // Generate a correct link.
+      $path = url($destination_parsed['path'], $destination_parsed);
+
+      // Building the attributes for the link.
+      $attributes = array(
+        'href' => $path,
+        'title' => $title,
+        'target' => $target,
+        'class' => $class,
+      );
+
       if (!$text) {
         $rendered = drupal_render($element[$delta]);
       }
       else {
         $rendered = $text;
       }
+
       // Convert HTML code to a DOMDocument object.
       $html_dom = filter_dom_load($rendered);
       // Getting the <body> element.
@@ -364,4 +389,46 @@ function linked_field_link_field($node, $dom, $attributes) {
       }
     }
   }
+}
+/**
+ * Implements hook_token_info().
+ *
+ * Provides tokens for the current field item.
+ */
+function linked_field_token_info() {
+  $info = array();
+
+  $info['types']['field-item'] = array(
+    'name' => t('Field item'),
+    'description' => t('Tokens related to delta value of field.'),
+    'needs-data' => 'field-item',
+  );
+
+  $info['tokens']['field-item']['delta'] = array(
+    'name' => t('Field item delta'),
+    'description' => t('The delta of this field item.'),
+  );
+
+  $info['tokens']['field-item']['raw'] = array(
+    'name' => t('Raw item value'),
+    'description' => t('The raw value of this field item.'),
+  );
+
+  return $info;
+}
+/**
+ * Implements hook_tokens().
+ *
+ * Replace our tokens that we provide in linked_field_token_info().
+ */
+function linked_field_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
+
+  if ($type == 'field-item') {
+    foreach ($tokens as $name => $original) {
+      $replacements[$original] = $data['field-item'][$name];
+    }
+  }
+
+  return $replacements;
 }
