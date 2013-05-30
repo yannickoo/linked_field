@@ -263,7 +263,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
         $replace_token = array($type => $data);
 
         if ($type == 'field-item') {
-          // The tokens should not be cleared when replacing field for Entity tokens will be cleared.
+          // The tokens should not be cleared when replacing field item tokens.
           $clear = FALSE;
         }
         else {
