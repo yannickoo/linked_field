@@ -216,6 +216,12 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
     $settings = $display['settings'];
 
+    // We need special behavior for Display Suite fields.
+    if ($element['#field_type'] == 'ds') {
+      $field_settings = ds_get_field_settings($element['#entity_type'], $element['#bundle'], $element['#view_mode']);
+      $settings = $field_settings[$element['#field_name']]['formatter_settings'];
+    }
+
     // Continue to next if no Linked Field settings were found.
     if (!isset($settings['linked_field'])) {
       continue;
