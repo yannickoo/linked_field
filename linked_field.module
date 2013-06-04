@@ -227,7 +227,9 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       continue;
     }
 
-    $field_items = field_get_items($element['#entity_type'], $element['#object'], $field_name, $element['#object']->language);
+    // Some entities don't have a language so we need a fallback.
+    $language = isset($element['#object']->language) ? $element['#object']->language : NULL;
+    $field_items = field_get_items($element['#entity_type'], $element['#object'], $field_name, $language);
     foreach (element_children($element) as $delta) {
       // Normalize the settings.
       $linked = $settings['linked_field']['linked'];
