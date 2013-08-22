@@ -219,7 +219,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     // We need special behavior for Display Suite fields.
     if ($element['#field_type'] == 'ds') {
       $field_settings = ds_get_field_settings($element['#entity_type'], $element['#bundle'], $element['#view_mode']);
-      $settings = $field_settings[$element['#field_name']]['formatter_settings'];
+      $settings = isset($field_settings[$element['#field_name']]['formatter_settings']) ? $field_settings[$element['#field_name']]['formatter_settings'] : array();
     }
 
     // Continue to next if no Linked Field settings were found.
@@ -229,7 +229,10 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
     // Some entities don't have a language so we need a fallback.
     $language = isset($element['#object']->language) ? $element['#object']->language : NULL;
-    $field_items = field_get_items($element['#entity_type'], $element['#object'], $field_name, $language);
+    // We need special behavior for Display Suite fields.
+    if ($element['#field_type'] != 'ds') {
+      $field_items = field_get_items($element['#entity_type'], $element['#object'], $field_name, $language);
+    }
     foreach (element_children($element) as $delta) {
       // Normalize the settings.
       $linked = $settings['linked_field']['linked'];
@@ -246,16 +249,20 @@ function linked_field_field_attach_view_alter(&$output, $context) {
         continue;
       }
 
-      // Get raw value of field.
-      $field_raw_value = array_shift($field_items[$delta]);
-      // Replace tokens and filter the value.
-      $replace_tokens = array(
-        'field-item' => array(
-          'delta' => $delta,
-          'raw' => $field_raw_value,
-        ),
-        $element['#entity_type'] => $element['#object'],
-      );
+      $replace_tokens = array($element['#entity_type'] => $element['#object']);
+
+      // We need special behavior for Display Suite fields.
+      if (isset($field_items[$delta])) {
+        // Get raw value of field.
+        $field_raw_value = array_shift($field_items[$delta]);
+        // Replace tokens and filter the value.
+        $replace_tokens += array(
+          'field-item' => array(
+            'delta' => $delta,
+            'raw' => $field_raw_value,
+          ),
+        );
+      }
 
       /*
        * Replace all field tokens and then entity tokens. This allows field
