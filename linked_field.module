@@ -171,10 +171,20 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#description' => t('Here you can enter a token which will be used as link text. Note that the actual field output will be overridden.'),
   );
 
+  $token_types = array('field-item');
+  // We want to access vocabulary tokens in taxonomy terms.
+  if ($entity_type == 'taxonomy_term') {
+    $token_types[] = 'term';
+    $token_types[] = 'vocabulary';
+  }
+  else {
+    $token_types[] = $entity_type;
+  }
+
   $settings_form['linked_field']['token'] = array(
     '#type' => 'container',
     '#theme' => 'token_tree',
-    '#token_types' => array($entity_type, 'field-item'),
+    '#token_types' => $token_types,
     '#dialog' => TRUE,
     '#states' => array(
       'visible' => array(
