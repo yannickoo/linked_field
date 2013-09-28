@@ -240,6 +240,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     // Some entities don't have a language so we need a fallback.
     $language = isset($element['#object']->language) ? $element['#object']->language : NULL;
     // We need special behavior for Display Suite fields.
+    // @TODO: Where does this come from?
     if ($element['#field_type'] != 'ds') {
       $field_items = field_get_items($element['#entity_type'], $element['#object'], $field_name, $language);
     }
@@ -262,6 +263,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       $replace_tokens = array($element['#entity_type'] => $element['#object']);
 
       // We need special behavior for Display Suite fields.
+      // @TODO: Where does this come from?
       if (isset($field_items[$delta])) {
         // Get raw value of field.
         $field_raw_value = array_shift($field_items[$delta]);
