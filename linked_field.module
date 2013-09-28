@@ -204,6 +204,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     $settings = $component['settings'];
 
     // We need special behavior for Display Suite fields.
+    // @TODO: We have to check whether this still works.
     if ($element['#field_type'] == 'ds') {
       $field_settings = ds_get_field_settings($element['#entity_type'], $element['#bundle'], $element['#view_mode']);
       $settings = isset($field_settings[$element['#field_name']]['formatter_settings']) ? $field_settings[$element['#field_name']]['formatter_settings'] : array();
@@ -216,11 +217,6 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
     // Some entities don't have a language so we need a fallback.
     $language = isset($element['#object']->language) ? $element['#object']->language : NULL;
-    // We need special behavior for Display Suite fields.
-    if ($element['#field_type'] != 'ds') {
-      dpm($element);
-      //$field_items = $element['#entity']->getTranslation($langcode)->{$field_name};
-    }
 
     foreach (element_children($element) as $delta) {
       // Normalize the settings.
@@ -240,7 +236,6 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
       $replace_tokens = array($element['#entity_type'] => $element['#object']);
 
-      // We need special behavior for Display Suite fields.
       if (isset($field_items[$delta])) {
         // Get raw value of field.
         $field_raw_value = array_shift($field_items[$delta]);
