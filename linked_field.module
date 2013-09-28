@@ -5,7 +5,7 @@
  * Main file of Linked Field module.
  */
 
-use \Drupal\Component\Utility\Url;
+use Drupal\Component\Utility\Url;
 
 /**
  * Implements hook_field_formatter_info_alter().
