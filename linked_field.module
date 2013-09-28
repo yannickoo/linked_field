@@ -5,6 +5,8 @@
  * Main file of Linked Field module.
  */
 
+use \Drupal\Component\Utility\Url;
+
 /**
  * Implements hook_field_formatter_info_alter().
  */
@@ -35,14 +37,13 @@ function linked_field_field_formatter_info_alter(&$infos) {
  * Implements hook_field_formatter_settings_summary_alter().
  */
 function linked_field_field_formatter_settings_summary_alter(&$summary, $context) {
-  $display = $context['instance']['display'][$context['view_mode']];
-  $settings = $display['settings'];
+  $settings = $context['formatter']->getSettings();
 
   // Break when no linked field settings were found.
   if (!isset($settings['linked_field'])) {
     // We have to put something in the summary so that we can ever
     // set Linked Field settings.
-    $summary .= ' ';
+    $summary[] = ' ';
     return;
   }
 
@@ -79,23 +80,20 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   }
 
   if ($linked && $destination) {
-    $summary .= theme('item_list', array('items' => $summary_items, 'title' => 'Linked Field'));
-  }
-  else {
-    $summary .= ' ';
+    $summary[] = theme('item_list', array('items' => $summary_items, 'title' => 'Linked Field'));
   }
 }
 
 /**
  * Implements hook_field_formatter_settings_form_alter().
  */
-function linked_field_field_formatter_settings_form_alter(&$settings_form, $context) {
+function linked_field_field_formatter_settings_form_alter(&$element, &$form_state, $context) {
   $field = $context['field'];
   $entity_type = $context['instance']['entity_type'];
-  $display = $context['instance']['display'][$context['view_mode']];
-  $settings = $display['settings'];
+  $settings = $context['formatter']->getSettings();
 
-  $settings_form['linked_field'] = array(
+
+  $element['linked_field'] = array(
     '#type' => 'container',
     '#attributes' => array('class' => array('linked-field-linked-wrapper')),
     '#attached' => array(
@@ -105,13 +103,13 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     ),
   );
 
-  $settings_form['linked_field']['linked'] = array(
+  $element['linked_field']['linked'] = array(
     '#title' => t('Link this field'),
     '#type' => 'checkbox',
     '#default_value' => $settings['linked_field']['linked'],
   );
 
-  $settings_form['linked_field']['destination'] = array(
+  $element['linked_field']['destination'] = array(
     '#title' => t('Destination'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['destination'],
@@ -124,9 +122,9 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     ),
   );
 
-  $settings_form['linked_field']['advanced'] = array(
+  $element['linked_field']['advanced'] = array(
     '#title' => t('Advanced'),
-    '#type' => 'fieldset',
+    '#type' => 'details',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#states' => array(
@@ -136,35 +134,35 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     ),
   );
 
-  $settings_form['linked_field']['advanced']['title'] = array(
+  $element['linked_field']['advanced']['title'] = array(
     '#title' => t('Title'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['advanced']['title'],
     '#description' => t('Here you can enter a token which will be used as link <em>title</em> attribute.'),
   );
 
-  $settings_form['linked_field']['advanced']['target'] = array(
+  $element['linked_field']['advanced']['target'] = array(
     '#title' => t('Target'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['advanced']['target'],
     '#description' => t('Here you can enter a token which will be used as link <em>target</em> attribute..'),
   );
 
-  $settings_form['linked_field']['advanced']['class'] = array(
+  $element['linked_field']['advanced']['class'] = array(
     '#title' => t('Class'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['advanced']['class'],
     '#description' => t('Here you can enter a token which will be used as link <em>class</em> attribute.'),
   );
 
-  $settings_form['linked_field']['advanced']['rel'] = array(
+  $element['linked_field']['advanced']['rel'] = array(
     '#title' => t('Relationship'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['advanced']['rel'],
     '#description' => t('Here you can enter a token which will be used as link <em>rel</em> attribute.'),
   );
 
-  $settings_form['linked_field']['advanced']['text'] = array(
+  $element['linked_field']['advanced']['text'] = array(
     '#title' => t('Text'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['advanced']['text'],
@@ -181,7 +179,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     $token_types[] = $entity_type;
   }
 
-  $settings_form['linked_field']['token'] = array(
+  $element['linked_field']['token'] = array(
     '#type' => 'container',
     '#theme' => 'token_tree',
     '#token_types' => $token_types,
@@ -201,30 +199,9 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
 function linked_field_field_attach_view_alter(&$output, $context) {
   foreach (element_children($output) as $field_name) {
     $element = $output[$field_name];
-    $view_modes = field_view_mode_settings($element['#entity_type'], $element['#bundle']);
-
-    // Check whether set view mode has custom settings.
-    if (isset($view_modes[$context['view_mode']]) && !$view_modes[$context['view_mode']]['custom_settings']) {
-      $context['view_mode'] = 'default';
-    }
-
-    $instance = field_info_instance($element['#entity_type'], $field_name, $element['#bundle']);
-
-    // Check whether view mode exists in the field instance.
-    if (isset($instance['display'][$context['view_mode']])) {
-      $display = $instance['display'][$context['view_mode']];
-    }
-    // If no view mode was specified it should be set to '_custom'
-    // like in field_view_field().
-    elseif ($context['view_mode'] == '_custom' && is_array($context['display'])) {
-      $display = $context['display'];
-    }
-    // Otherwise we use the 'default' view mode.
-    else {
-      $display = $instance['display']['default'];
-    }
-
-    $settings = $display['settings'];
+    $entity_display = entity_get_render_display($context['entity'], $context['view_mode']);
+    $component = $entity_display->getComponent($field_name);
+    $settings = $component['settings'];
 
     // We need special behavior for Display Suite fields.
     if ($element['#field_type'] == 'ds') {
@@ -241,8 +218,10 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     $language = isset($element['#object']->language) ? $element['#object']->language : NULL;
     // We need special behavior for Display Suite fields.
     if ($element['#field_type'] != 'ds') {
-      $field_items = field_get_items($element['#entity_type'], $element['#object'], $field_name, $language);
+      dpm($element);
+      //$field_items = $element['#entity']->getTranslation($langcode)->{$field_name};
     }
+
     foreach (element_children($element) as $delta) {
       // Normalize the settings.
       $linked = $settings['linked_field']['linked'];
@@ -289,14 +268,15 @@ function linked_field_field_attach_view_alter(&$output, $context) {
           $clear = TRUE;
         }
 
-        $destination = token_replace($destination, $replace_token, array('clear' => $clear));
-        $title = $title ? filter_xss_admin(token_replace($title, $replace_token, array('clear' => $clear))) : '';
-        $target = $target ? check_plain(token_replace($target, $replace_token, array('clear' => $clear))) : '';
-        $class = $class ? check_plain(token_replace($class, $replace_token, array('clear' => $clear))) : '';
-        $rel = $rel ? check_plain(token_replace($rel, $replace_token, array('clear' => $clear))) : '';
+        $token_service = \Drupal::token();
+        $destination = $token_service->replace($destination, $replace_token, array('clear' => $clear));
+        $title = $title ? filter_xss_admin($token_service->replace($title, $replace_token, array('clear' => $clear))) : '';
+        $target = $target ? check_plain($token_service->replace($target, $replace_token, array('clear' => $clear))) : '';
+        $class = $class ? check_plain($token_service->replace($class, $replace_token, array('clear' => $clear))) : '';
+        $rel = $rel ? check_plain($token_service->replace($rel, $replace_token, array('clear' => $clear))) : '';
         // Would be better to have own set with allowed tags so that only
         // inline elements are allowed.
-        $text = $text ? filter_xss_admin(token_replace($text, $replace_token, array('clear' => $clear))) : '';
+        $text = $text ? filter_xss_admin($token_service->replace($text, $replace_token, array('clear' => $clear))) : '';
       }
 
       // Continue to next field if destination is empty.
@@ -305,7 +285,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       }
 
       // Parse the destination to get queries and fragments working.
-      $destination_parsed = drupal_parse_url($destination);
+      $destination_parsed = Url::parse($destination);
 
       // Generate a correct link.
       $path = url($destination_parsed['path'], $destination_parsed);
