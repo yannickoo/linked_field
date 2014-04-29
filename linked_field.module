@@ -194,11 +194,11 @@ function linked_field_field_formatter_settings_form_alter(&$element, &$form_stat
 }
 
 /**
- * Implements hook_field_attach_view_alter().
+ * Implements hook_entity_display_build_alter.
  */
-function linked_field_field_attach_view_alter(&$output, $context) {
-  foreach (element_children($output) as $field_name) {
-    $element = $output[$field_name];
+function linked_field_entity_display_build_alter(&$build, $context) {
+  foreach (element_children($build) as $field_name) {
+    $element = &$build[$field_name];
     $entity_display = entity_get_render_display($context['entity'], $context['view_mode']);
     $component = $entity_display->getComponent($field_name);
     $settings = $component['settings'];
@@ -312,7 +312,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
       // Converting the DOMDocument object back to HTML code.
       $rendered = filter_dom_serialize($html_dom);
-      $output[$field_name][$delta] = array('#markup' => $rendered);
+      $build[$field_name][$delta] = array('#markup' => $rendered);
     }
   }
 }
