@@ -10,14 +10,14 @@ use Drupal\Component\Utility\Url;
 /**
  * Implements hook_field_formatter_info_alter().
  */
-function linked_field_field_formatter_info_alter(&$infos) {
-  foreach ($infos as &$info) {
+function linked_field_field_formatter_info_alter(array &$info) {
+  foreach ($info as &$formatter) {
     // Add a settings array if no settings were found.
-    if (!isset($info['settings']) || !is_array($info['settings'])) {
-      $info['settings'] = array();
+    if (!isset($formatter['settings']) || !is_array($formatter['settings'])) {
+      $formatter['settings'] = array();
     }
 
-    $info['settings'] += array(
+    $formatter['settings'] += array(
       'linked_field' => array(
         'linked' => 0,
         'destination' => '',
