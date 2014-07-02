@@ -108,7 +108,10 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   $text = $settings['linked_field']['advanced']['text'];
 
   $summary_items = array();
-  $summary_items[] = t('Destination: @destination', array('@destination' => $destination));
+
+  if ($destination) {
+    $summary_items[] = t('Destination: @destination', array('@destination' => $destination));
+  }
 
   if ($title) {
     $summary_items[] = t('Title: @title', array('@title' => $title));
@@ -130,7 +133,7 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
     $summary_items[] = t('Text: @text', array('@text' => $text));
   }
 
-  if ($linked && $destination) {
+  if ($linked) {
     $summary .= theme('item_list', array('items' => $summary_items, 'title' => 'Linked Field'));
   }
   else {
@@ -168,7 +171,6 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['destination'],
     '#description' => t('Here you can enter a token which will be used as link url.'),
-    '#element_validate' => array('linked_field_element_validate_destination'),
     '#states' => array(
       'visible' => array(
         'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
@@ -297,18 +299,33 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       $field_items = field_get_items($element['#entity_type'], $element['#object'], $field_name, $language);
     }
     foreach (element_children($element) as $delta) {
-      // Normalize the settings.
-      $linked = $settings['linked_field']['linked'];
-      $destination = $settings['linked_field']['destination'];
-      $title = $settings['linked_field']['advanced']['title'];
-      $target = $settings['linked_field']['advanced']['target'];
-      $class = $settings['linked_field']['advanced']['class'];
-      $rel = $settings['linked_field']['advanced']['rel'];
-      $text = $settings['linked_field']['advanced']['text'];
+      // Parse the destination to get queries and fragments working.
+      $destination_parsed = drupal_parse_url($settings['linked_field']['destination']);
 
-      // If the destination field isn't filled for this field, we shouldn't
-      // do anything. Continue to the next field.
-      if (!$destination || !$linked) {
+      // Generate a correct link.
+      $path = $destination_parsed['path'];
+      unset($destination_parsed['path']);
+
+      // Building an array which looks like the parameters you pass to l().
+      $linked_field_settings = array(
+        'linked' => $settings['linked_field']['linked'],
+        'text' => $settings['linked_field']['advanced']['text'],
+        'path' => $path,
+        'options' => array(
+          'attributes' => array(
+            'title' => $settings['linked_field']['advanced']['title'],
+            'target' => $settings['linked_field']['advanced']['target'],
+            'class' => $settings['linked_field']['advanced']['class'],
+            'rel' => $settings['linked_field']['advanced']['rel'],
+          ),
+        ) + $destination_parsed,
+      );
+
+      // Let other modules alter all the settings.
+      drupal_alter('linked_field_settings', $linked_field_settings, $context);
+
+      // If there is no destination or Linked Field is disabled continue.
+      if (!$linked_field_settings['path'] || (!$linked_field_settings['linked'] && $linked_field_settings['path'])) {
         continue;
       }
 
@@ -343,41 +360,32 @@ function linked_field_field_attach_view_alter(&$output, $context) {
           $clear = TRUE;
         }
 
-        $destination = token_replace($destination, $replace_token, array('clear' => $clear));
-        $title = $title ? filter_xss_admin(token_replace($title, $replace_token, array('clear' => $clear))) : '';
-        $target = $target ? check_plain(token_replace($target, $replace_token, array('clear' => $clear))) : '';
-        $class = $class ? check_plain(token_replace($class, $replace_token, array('clear' => $clear))) : '';
-        $rel = $rel ? check_plain(token_replace($rel, $replace_token, array('clear' => $clear))) : '';
+        dpm($linked_field_settings);
+
+        $linked_field_settings['path'] = token_replace($linked_field_settings['path'], $replace_token, array('clear' => $clear));
+        $linked_field_settings['options']['attributes']['title'] = $linked_field_settings['options']['attributes']['title'] ? filter_xss_admin(token_replace($linked_field_settings['options']['attributes']['title'], $replace_token, array('clear' => $clear))) : '';
+        $linked_field_settings['options']['attributes']['target'] = $linked_field_settings['options']['attributes']['target'] ? check_plain(token_replace($linked_field_settings['options']['attributes']['target'], $replace_token, array('clear' => $clear))) : '';
+        $linked_field_settings['options']['attributes']['class'] = $linked_field_settings['options']['attributes']['class'] ? check_plain(token_replace($linked_field_settings['options']['attributes']['class'], $replace_token, array('clear' => $clear))) : '';
+        $linked_field_settings['options']['attributes']['rel'] = $linked_field_settings['options']['attributes']['rel'] ? check_plain(token_replace($linked_field_settings['options']['attributes']['rel'], $replace_token, array('clear' => $clear))) : '';
         // Would be better to have own set with allowed tags so that only
         // inline elements are allowed.
-        $text = $text ? filter_xss_admin(token_replace($text, $replace_token, array('clear' => $clear))) : '';
+        $linked_field_settings['text'] = $linked_field_settings['text'] ? filter_xss_admin(token_replace($linked_field_settings['text'], $replace_token, array('clear' => $clear))) : '';
       }
 
       // Continue to next field if destination is empty.
-      if (!$destination) {
+      if (!$linked_field_settings['path']) {
         continue;
       }
 
-      // Parse the destination to get queries and fragments working.
-      $destination_parsed = drupal_parse_url($destination);
+      // We need the destination as link attribute so let's move it.
+      $linked_field_settings['options']['attributes']['href'] = url($linked_field_settings['path'], $linked_field_settings['options']);
+      unset($linked_field_settings['path']);
 
-      // Generate a correct link.
-      $path = url($destination_parsed['path'], $destination_parsed);
-
-      // Building the attributes for the link.
-      $attributes = array(
-        'href' => $path,
-        'title' => $title,
-        'target' => $target,
-        'class' => $class,
-        'rel' => $rel,
-      );
-
-      if (!$text) {
+      if (!$linked_field_settings['text']) {
         $rendered = drupal_render($element[$delta]);
       }
       else {
-        $rendered = $text;
+        $rendered = $linked_field_settings['text'];
       }
 
       // Convert HTML code to a DOMDocument object.
@@ -387,7 +395,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       $nodes = $body->item(0);
 
       // Recursively walk over the DOMDocument body and place the links.
-      linked_field_link_field($nodes, $html_dom, $attributes);
+      linked_field_link_field($nodes, $html_dom, $linked_field_settings['options']['attributes']);
 
       // Converting the DOMDocument object back to HTML code.
       $rendered = filter_dom_serialize($html_dom);
@@ -496,24 +504,6 @@ function linked_field_field_list() {
   );
 
   return $output;
-}
-
-/**
- * Form element validation handler for destination field in settings form.
- */
-function linked_field_element_validate_destination($element, &$form_state) {
-  $value = $element['#value'];
-  // We check whether 'fields' exists in the form_state values.
-  if (isset($form_state['values']['fields'])) {
-    // We can hardcode the key because it is ever the same structure.
-    $field = $element['#array_parents'][1];
-    // Get 'linked' value.
-    $linked = $form_state['values']['fields'][$field]['settings_edit_form']['settings']['linked_field']['linked'];
-    // If this field should be linked, the destination field is required.
-    if ($linked && !$value) {
-      form_error($element, t('!name field is required.', array('!name' => $element['#title'])));
-    }
-  }
 }
 
 /**
