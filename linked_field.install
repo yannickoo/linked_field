@@ -6,9 +6,9 @@
  */
 
 /**
- * Implements hook_install().
+ * Implements hook_enable().
  */
-function linked_field_install() {
+function linked_field_enable() {
   // We have to change the weight so we run at last.
   db_update('system')
     ->fields(array('weight' => '100'))
@@ -97,7 +97,7 @@ function linked_field_uninstall() {
  * Update module weight to run at last.
  */
 function linked_field_update_7001(&$sandbox) {
-  linked_field_install();
+  linked_field_enable();
 }
 
 /**
@@ -388,5 +388,5 @@ function linked_field_update_7005(&$sandbox) {
  * Update module weight to run at last.
  */
 function linked_field_update_7006(&$sandbox) {
-  linked_field_install();
+  linked_field_enable();
 }
