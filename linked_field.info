@@ -3,4 +3,3 @@ description = Adds the functionality to link fields to a specific destination.
 core = 7.x
 
 dependencies[] = field_formatter_settings
-dependencies[] = token
