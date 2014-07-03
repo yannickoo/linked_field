@@ -47,6 +47,50 @@ function linked_field_menu() {
 }
 
 /**
+ * Implements hook_token_info().
+ *
+ * Provides tokens for the current field item.
+ */
+function linked_field_token_info() {
+  $info = array();
+
+  $info['types']['field-item'] = array(
+    'name' => t('Field item'),
+    'description' => t('Tokens related to delta value of field.'),
+    'needs-data' => 'field-item',
+  );
+
+  $info['tokens']['field-item']['delta'] = array(
+    'name' => t('Field item delta'),
+    'description' => t('The delta of this field item.'),
+  );
+
+  $info['tokens']['field-item']['raw'] = array(
+    'name' => t('Raw item value'),
+    'description' => t('The raw value of this field item.'),
+  );
+
+  return $info;
+}
+
+/**
+ * Implements hook_tokens().
+ *
+ * Replace our tokens that we provide in linked_field_token_info().
+ */
+function linked_field_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
+
+  if ($type == 'field-item') {
+    foreach ($tokens as $name => $original) {
+      $replacements[$original] = $data['field-item'][$name];
+    }
+  }
+
+  return $replacements;
+}
+
+/**
  * Implements hook_menu_alter().
  */
 function linked_field_menu_alter(&$items) {
@@ -559,46 +603,4 @@ function linked_field_link_field($node, $dom, $attributes) {
       }
     }
   }
-}
-/**
- * Implements hook_token_info().
- *
- * Provides tokens for the current field item.
- */
-function linked_field_token_info() {
-  $info = array();
-
-  $info['types']['field-item'] = array(
-    'name' => t('Field item'),
-    'description' => t('Tokens related to delta value of field.'),
-    'needs-data' => 'field-item',
-  );
-
-  $info['tokens']['field-item']['delta'] = array(
-    'name' => t('Field item delta'),
-    'description' => t('The delta of this field item.'),
-  );
-
-  $info['tokens']['field-item']['raw'] = array(
-    'name' => t('Raw item value'),
-    'description' => t('The raw value of this field item.'),
-  );
-
-  return $info;
-}
-/**
- * Implements hook_tokens().
- *
- * Replace our tokens that we provide in linked_field_token_info().
- */
-function linked_field_tokens($type, $tokens, array $data = array(), array $options = array()) {
-  $replacements = array();
-
-  if ($type == 'field-item') {
-    foreach ($tokens as $name => $original) {
-      $replacements[$original] = $data['field-item'][$name];
-    }
-  }
-
-  return $replacements;
 }
