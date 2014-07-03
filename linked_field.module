@@ -215,7 +215,7 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#title' => t('Destination'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['destination'],
-    '#description' => t('Here you can enter a token which will be used as link url.'),
+    '#description' => t('Enter the link destination here. If you need a dynamic destination you can set it via the <a href="@alter-hook">alter hook</a>.', array('@alter-hook' => 'http://cgit.drupalcode.org/linked_field/tree/linked_field.api.php')),
     '#states' => array(
       'visible' => array(
         'input[name$="[settings][linked_field][linked]"]' => array('checked' => TRUE),
@@ -239,35 +239,35 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     '#title' => t('Title'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['advanced']['title'],
-    '#description' => t('Here you can enter a token which will be used as link <em>title</em> attribute.'),
+    '#description' => t('This value will be used as <em>title</em> attribute.'),
   );
 
   $settings_form['linked_field']['advanced']['target'] = array(
     '#title' => t('Target'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['advanced']['target'],
-    '#description' => t('Here you can enter a token which will be used as link <em>target</em> attribute..'),
+    '#description' => t('This value will be used as <em>target</em> attribute.'),
   );
 
   $settings_form['linked_field']['advanced']['class'] = array(
     '#title' => t('Class'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['advanced']['class'],
-    '#description' => t('Here you can enter a token which will be used as link <em>class</em> attribute.'),
+    '#description' => t('This value will be used as <em>class</em> attribute.'),
   );
 
   $settings_form['linked_field']['advanced']['rel'] = array(
     '#title' => t('Relationship'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['advanced']['rel'],
-    '#description' => t('Here you can enter a token which will be used as link <em>rel</em> attribute.'),
+    '#description' => t('This value will be used as <em>rel</em> attribute.'),
   );
 
   $settings_form['linked_field']['advanced']['text'] = array(
     '#title' => t('Text'),
     '#type' => 'textfield',
     '#default_value' => $settings['linked_field']['advanced']['text'],
-    '#description' => t('Here you can enter a token which will be used as link text. Note that the actual field output will be overridden.'),
+    '#description' => t('This value will be used as link text and overrides the actual field output.'),
   );
 
   $token_types = array('field-item');
