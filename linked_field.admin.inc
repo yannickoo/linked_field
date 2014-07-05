@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Administrative interface for linked fields.
+ * Administrative interface for Linked Field.
  */
 
 /**
