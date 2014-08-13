@@ -9,8 +9,8 @@ INTRODUCTION
 ------------
 
 Current Maintainers:
-  Yannick Leyendecker (http://drupal.org/user/531118)
-  Fabian Pintsch (http://drupal.org/user/1625944)
+  [yannickoo](http://drupal.org/user/531118)
+  [Fabian Pintsch](http://drupal.org/user/1625944)
 
 Linked Field allows you to link fields to a specific destination.
 
