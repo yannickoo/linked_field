@@ -475,7 +475,7 @@ function linked_field_link_field($node, $dom, $attributes) {
           foreach ($attributes as $name => $value) {
             if ($value) {
               // Convert all HTML entities back to their applicable characters.
-              $value = html_entity_decode($value);
+              $value = html_entity_decode($value, ENT_QUOTES);
               $element->setAttribute($name, $value);
             }
           }
