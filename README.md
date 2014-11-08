@@ -1,23 +1,12 @@
-CONTENTS OF THIS FILE
----------------------
-
- * Introduction
- * Installation
-
-
-INTRODUCTION
-------------
+# Introduction
 
 Current Maintainers:
 
-* [yannickoo](http://drupal.org/user/531118)
-* [Fabian Pintsch](http://drupal.org/user/1625944)
+* [yannickoo](https://www.drupal.org/u/yannickoo)
 
 Linked Field allows you to link fields to a specific destination.
 
-
-INSTALLATION
-------------
+# Installation
 
 1. Install the module the drupal way [1]
 
