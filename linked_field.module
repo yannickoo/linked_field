@@ -332,7 +332,7 @@ function linked_field_field_attach_view_alter(&$output, $context) {
     }
 
     // Continue to next if no Linked Field settings were found.
-    if (!isset($settings['linked_field'])) {
+    if (!isset($settings['linked_field']) || !$settings['linked_field']['linked']) {
       continue;
     }
 
