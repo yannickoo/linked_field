@@ -392,9 +392,9 @@ function linked_field_field_attach_view_alter(&$output, $context) {
       
       $options = array();
       if ($context['language'] != LANGUAGE_NONE) {
-        $language_list = language_list();
-        if (isset($language_list[$context['language']])) {
-          $options['language'] = $language_list[$context['language']];
+        $languages = language_list();
+        if (isset($languages[$context['language']])) {
+          $options['language'] = $languages[$context['language']];
         }
       }
 
