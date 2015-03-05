@@ -389,6 +389,14 @@ function linked_field_field_attach_view_alter(&$output, $context) {
           ),
         );
       }
+      
+      $options = array();
+      if ($context['language'] != LANGUAGE_NONE) {
+        $languages = language_list();
+        if (isset($languages[$context['language']])) {
+          $options['language'] = $languages[$context['language']];
+        }
+      }
 
       /*
        * Replace all field tokens and then entity tokens. This allows field
@@ -399,20 +407,19 @@ function linked_field_field_attach_view_alter(&$output, $context) {
 
         if ($type == 'field-item') {
           // The tokens should not be cleared when replacing field item tokens.
-          $clear = FALSE;
-        }
-        else {
-          $clear = TRUE;
+          $options['clear'] = FALSE;
+        } else {
+          $options['clear'] = TRUE;
         }
 
-        $linked_field_settings['path'] = token_replace($linked_field_settings['path'], $replace_token, array('clear' => $clear));
-        $linked_field_settings['options']['attributes']['title'] = $linked_field_settings['options']['attributes']['title'] ? filter_xss_admin(token_replace($linked_field_settings['options']['attributes']['title'], $replace_token, array('clear' => $clear))) : '';
-        $linked_field_settings['options']['attributes']['target'] = $linked_field_settings['options']['attributes']['target'] ? check_plain(token_replace($linked_field_settings['options']['attributes']['target'], $replace_token, array('clear' => $clear))) : '';
-        $linked_field_settings['options']['attributes']['class'] = $linked_field_settings['options']['attributes']['class'] ? check_plain(token_replace($linked_field_settings['options']['attributes']['class'], $replace_token, array('clear' => $clear))) : '';
-        $linked_field_settings['options']['attributes']['rel'] = $linked_field_settings['options']['attributes']['rel'] ? check_plain(token_replace($linked_field_settings['options']['attributes']['rel'], $replace_token, array('clear' => $clear))) : '';
+        $linked_field_settings['path'] = token_replace($linked_field_settings['path'], $replace_token, $options);
+        $linked_field_settings['options']['attributes']['title'] = $linked_field_settings['options']['attributes']['title'] ? filter_xss_admin(token_replace($linked_field_settings['options']['attributes']['title'], $replace_token, $options)) : '';
+        $linked_field_settings['options']['attributes']['target'] = $linked_field_settings['options']['attributes']['target'] ? check_plain(token_replace($linked_field_settings['options']['attributes']['target'], $replace_token, $options)) : '';
+        $linked_field_settings['options']['attributes']['class'] = $linked_field_settings['options']['attributes']['class'] ? check_plain(token_replace($linked_field_settings['options']['attributes']['class'], $replace_token, $options)) : '';
+        $linked_field_settings['options']['attributes']['rel'] = $linked_field_settings['options']['attributes']['rel'] ? check_plain(token_replace($linked_field_settings['options']['attributes']['rel'], $replace_token, $options)) : '';
         // Would be better to have own set with allowed tags so that only
         // inline elements are allowed.
-        $linked_field_settings['text'] = $linked_field_settings['text'] ? filter_xss_admin(token_replace($linked_field_settings['text'], $replace_token, array('clear' => $clear))) : '';
+        $linked_field_settings['text'] = $linked_field_settings['text'] ? filter_xss_admin(token_replace($linked_field_settings['text'], $replace_token, $options)) : '';
       }
 
       // Continue to next field if destination is empty.
