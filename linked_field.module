@@ -136,7 +136,7 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   $settings = $display['settings'];
 
   // Break when no linked field settings were found.
-  if (!isset($settings['linked_field'])) {
+  if (empty($settings['linked_field']['linked'])) {
     // We have to put something in the summary so that we can ever
     // set Linked Field settings.
     $summary .= ' ';
