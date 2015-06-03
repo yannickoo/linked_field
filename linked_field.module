@@ -292,6 +292,26 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
     ),
   );
 
+  // Display a token browser and show a warning to the user if Token
+  // module is not installed.
+  if (module_exists('token')) {
+    $settings_form['linked_field']['token'] += array(
+      '#type' => 'container',
+      '#theme' => 'token_tree',
+      '#token_types' => $token_types,
+      '#dialog' => TRUE,
+    );
+  }
+  else {
+    $field_name = drupal_clean_css_identifier($field['field_name']);
+
+    $settings_form['linked_field']['token']['#prefix'] = '<div class="form-item" id="edit-fields-' . $field_name . '-settings-edit-form-settings-linked-field-token">';
+    $settings_form['linked_field']['token']['#prefix'] .= '<div style="display: inline-block;" class="messages warning">';
+    $settings_form['linked_field']['token']['#suffix'] = '</div></div>';
+    $settings_form['linked_field']['token']['#markup'] = t('Install the <a href="@url">Token</a> module to browse available tokens.', array(
+      '@url' => url('https://www.drupal.org/project/token'),
+    ));
+  }
 }
 
 /**
