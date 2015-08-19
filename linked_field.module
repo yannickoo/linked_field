@@ -306,6 +306,11 @@ function linked_field_field_formatter_settings_form_alter(&$settings_form, $cont
 function linked_field_field_attach_view_alter(&$output, $context) {
   foreach (element_children($output) as $field_name) {
     $element = $output[$field_name];
+
+    if (empty($element['#entity_type']) || empty($element['#bundle'])) {
+      continue;
+    }
+
     $view_modes = field_view_mode_settings($element['#entity_type'], $element['#bundle']);
 
     // Check whether set view mode has custom settings.
