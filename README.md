@@ -1,7 +1,8 @@
 # Introduction
 
 Current Maintainers:
-  Yannick Leyendecker (https://www.drupal.org/u/yannickoo)
+
+* [yannickoo](https://www.drupal.org/u/yannickoo)
 
 Linked Field allows you to link fields to a specific destination.
 
@@ -14,4 +15,4 @@ Linked Field allows you to link fields to a specific destination.
    and you will see a destination field and the token list.
    Select a token and click "Update".
 
-[1] http://drupal.org/documentation/install/modules-themes/modules-7
+[1] http://drupal.org/documentation/install/modules-themes/modules-8
