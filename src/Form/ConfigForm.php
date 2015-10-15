@@ -63,6 +63,15 @@ class ConfigForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    $config_text = $form_state->getValue('config') ?: 'attributes:';
+
+    try {
+      $form_state->set('config', Yaml::decode($config_text));
+    }
+    catch (InvalidDataTypeException $e) {
+      $form_state->setErrorByName('config', $e->getMessage());
+    }
+
     parent::validateForm($form, $form_state);
   }
 
@@ -70,16 +79,13 @@ class ConfigForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    parent::submitForm($form, $form_state);
-
-    // Fix empty config text.
-    $config_text = $form_state->getValue('config') ?: 'attributes:';
-
-    $config = Yaml::decode($config_text);
+    $config = $form_state->get('config');
 
     $this->config('linked_field.config')
       ->setData($config)
       ->save();
+
+    parent::submitForm($form, $form_state);
   }
 
 }
