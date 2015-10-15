@@ -1,12 +1,8 @@
-# Introduction
+# Linked Field
 
-Current Maintainers:
+> Allows you to link fields to a specific destination.
 
-* [yannickoo](https://www.drupal.org/u/yannickoo)
-
-Linked Field allows you to link fields to a specific destination.
-
-# Installation
+## Installation
 
 1. Install the module the drupal way [1]
 
@@ -15,4 +11,7 @@ Linked Field allows you to link fields to a specific destination.
    and you will see a destination field and the token list.
    Select a token and click "Update".
 
+3. When you are missing some attributes configure them on config page [2]
+
 [1] http://drupal.org/documentation/install/modules-themes/modules-8
+[2] /admin/config/linked_field/config
