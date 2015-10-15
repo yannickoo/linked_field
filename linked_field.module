@@ -12,12 +12,16 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Xss;
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Unicode;
 
 /**
+ * Implements hook_field_formatter_settings_summary_alter().
+ *
  * @param $summary
  * @param $context
  */
 function linked_field_field_formatter_settings_summary_alter(&$summary, $context) {
+  $available_attributes = \Drupal::config('linked_field.config')->get('attributes') ?: [];
   $settings = $context['formatter']->getThirdPartySettings('linked_field');
 
   // Break when no linked field settings were found.
@@ -28,29 +32,25 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   // Normalize the settings.
   $linked = $settings['linked'];
   $destination = $settings['destination'];
-  $title = $settings['advanced']['title'];
-  $target = $settings['advanced']['target'];
-  $class = $settings['advanced']['class'];
-  $rel = $settings['advanced']['rel'];
   $text = $settings['advanced']['text'];
 
   $summary_items = [];
-  $summary_items[] = t('Destination: @destination', ['@destination' => $destination]);
+  $summary_items[] = t('Destination: <code>@destination</code>', ['@destination' => $destination]);
 
-  if ($title) {
-    $summary_items[] = t('Title: @title', ['@title' => $title]);
-  }
+  foreach ($available_attributes as $attribute => $info) {
+    if (empty($settings['advanced'][$attribute])) {
+      continue;
+    }
 
-  if ($target) {
-    $summary_items[] = t('Target: <code>@target</code>', ['@target' => $target]);
-  }
+    // Provide default label / description for attributes.
+    if (!$info['label']) {
+      $info['label'] = str_replace('-', ' ', Unicode::ucfirst($attribute));
+    }
 
-  if ($class) {
-    $summary_items[] = t('Class: <code>@class</code>', ['@class' => $class]);
-  }
-
-  if ($rel) {
-    $summary_items[] = t('Relationship: <code>@rel</code>', ['@rel' => $rel]);
+    $summary_items[] = t('@label: <code>@attribute</code>', [
+      '@label' => $info['label'],
+      '@attribute' => $settings['advanced'][$attribute],
+    ]);
   }
 
   if ($text) {
@@ -69,6 +69,8 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
 }
 
 /**
+ * Implements hook_field_formatter_third_party_settings_form().
+ *
  * @param \Drupal\Core\Field\FormatterInterface $plugin
  * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
  * @param $view_mode
@@ -76,6 +78,7 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
  * @param \Drupal\Core\Form\FormStateInterface $form_state
  */
 function linked_field_field_formatter_third_party_settings_form(\Drupal\Core\Field\FormatterInterface $plugin, \Drupal\Core\Field\FieldDefinitionInterface $field_definition, $view_mode, $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  $available_attributes = \Drupal::config('linked_field.config')->get('attributes') ?: [];
   $settings = $plugin->getThirdPartySettings('linked_field');
 
   $element['linked'] = [
@@ -109,33 +112,22 @@ function linked_field_field_formatter_third_party_settings_form(\Drupal\Core\Fie
     ],
   ];
 
-  $element['advanced']['title'] = [
-    '#title' => t('Title'),
-    '#type' => 'textfield',
-    '#default_value' => $settings['advanced']['title'],
-    '#description' => t('Here you can enter a token which will be used as link <em>title</em> attribute.'),
-  ];
+  foreach ($available_attributes as $attribute => $info) {
+    // Provide default label / description for attributes.
+    if (!$info['label']) {
+      $info['label'] = str_replace('-', ' ', Unicode::ucfirst($attribute));
+    }
+    if (!$info['description']) {
+      $info['description'] = t('Enter value for <code>@attribute</code> attribute.', ['@attribute' => $attribute]);
+    }
 
-  $element['advanced']['target'] = [
-    '#title' => t('Target'),
-    '#type' => 'textfield',
-    '#default_value' => $settings['advanced']['target'],
-    '#description' => t('Here you can enter a token which will be used as link <em>target</em> attribute.'),
-  ];
-
-  $element['advanced']['class'] = [
-    '#title' => t('Class'),
-    '#type' => 'textfield',
-    '#default_value' => $settings['advanced']['class'],
-    '#description' => t('Here you can enter a token which will be used as link <em>class</em> attribute.'),
-  ];
-
-  $element['advanced']['rel'] = [
-    '#title' => t('Relationship'),
-    '#type' => 'textfield',
-    '#default_value' => $settings['advanced']['rel'],
-    '#description' => t('Here you can enter a token which will be used as link <em>rel</em> attribute.'),
-  ];
+    $element['advanced'][$attribute] = [
+      '#type' => 'textfield',
+      '#title' => $info['label'],
+      '#description' => $info['description'],
+      '#default_value' => isset($settings['advanced'][$attribute]) ? $settings['advanced'][$attribute] : '',
+    ];
+  }
 
   $element['advanced']['text'] = [
     '#title' => t('Text'),
@@ -170,25 +162,17 @@ function linked_field_entity_display_build_alter(&$build, $context) {
     $element = &$build[$field_name];
     $entity_display = EntityViewDisplay::collectRenderDisplay($context['entity'], $context['view_mode']);
     $component = $entity_display->getComponent($field_name);
-    $settings = $component['third_party_settings'];
+    $settings = isset($component['third_party_settings']['linked_field']) ? $component['third_party_settings']['linked_field'] : [];
 
     // Continue to next if no Linked Field settings were found.
-    if (!isset($settings['linked_field'])) {
+    if (!isset($settings)) {
       continue;
     }
 
-    // Some entities don't have a language so we need a fallback.
-    $language = isset($element['#object']->language) ? $element['#object']->language : NULL;
-
     foreach (Element::children($element) as $delta) {
       // Normalize the settings.
-      $linked = $settings['linked_field']['linked'];
-      $destination = $settings['linked_field']['destination'];
-      $title = $settings['linked_field']['advanced']['title'];
-      $target = $settings['linked_field']['advanced']['target'];
-      $class = $settings['linked_field']['advanced']['class'];
-      $rel = $settings['linked_field']['advanced']['rel'];
-      $text = $settings['linked_field']['advanced']['text'];
+      $linked = $settings['linked'];
+      $destination = $settings['destination'];
 
       // If the destination field isn't filled for this field, we shouldn't
       // do anything. Continue to the next field.
@@ -227,12 +211,15 @@ function linked_field_entity_display_build_alter(&$build, $context) {
 
         $token_service = \Drupal::token();
         $destination = $token_service->replace($destination, $replace_token, ['clear' => $clear]);
-        $title = $title ? Xss::filterAdmin($token_service->replace($title, $replace_token, ['clear' => $clear])) : '';
-        $target = $target ? Html::escape($token_service->replace($target, $replace_token, ['clear' => $clear])) : '';
-        $class = $class ? Html::escape($token_service->replace($class, $replace_token, ['clear' => $clear])) : '';
-        $rel = $rel ? Html::escape($token_service->replace($rel, $replace_token, ['clear' => $clear])) : '';
+
+        $attributes = ['href' => ''];
+        foreach ($settings['advanced'] as $attribute => $value) {
+          $attributes[$attribute] = Html::escape($token_service->replace($value, $replace_token, ['clear' => $clear]));
+        }
+
         // Would be better to have own set with allowed tags so that only
         // inline elements are allowed.
+        $text = $settings['advanced']['text'];
         $text = $text ? Xss::filterAdmin($token_service->replace($text, $replace_token, ['clear' => $clear])) : '';
       }
 
@@ -245,16 +232,9 @@ function linked_field_entity_display_build_alter(&$build, $context) {
       $destination_parsed = UrlHelper::parse($destination);
 
       // Generate a correct link.
-      $path = Url::fromUri($destination_parsed['path'], $destination_parsed);
+      $path = Url::fromUri($destination_parsed['path'], $destination_parsed)->toString();
 
-      // Building the attributes for the link.
-      $attributes = [
-        'href' => $path,
-        'title' => $title,
-        'target' => $target,
-        'class' => $class,
-        'rel' => $rel,
-      ];
+      $attributes['href'] = $path;
 
       if (!$text) {
         $rendered = \Drupal::service('renderer')->render($element[$delta]);
@@ -354,6 +334,7 @@ function linked_field_link_field($node, $dom, $attributes) {
     }
   }
 }
+
 /**
  * Implements hook_token_info().
  *
@@ -395,4 +376,59 @@ function linked_field_tokens($type, $tokens, array $data = array(), array $optio
   }
 
   return $replacements;
+}
+
+/**
+ * Transform a text in attr|label|desc format into an array of attributes.
+ *
+ * @param string $attributes_text
+ *   The attributes to be converted.
+ * @return array
+ *   The attributes as array.
+ */
+function linked_field_attributes_parse($attributes_text) {
+  $lines = preg_split('/\n|\r/', $attributes_text, -1, PREG_SPLIT_NO_EMPTY);
+  $lines = array_map('trim', $lines);
+  $lines = array_filter($lines, 'strlen');
+  $attributes = [];
+
+  foreach ($lines as $line) {
+    if (preg_match('/^([^\s\|]+)(?:\|([^\|]+))?(?:\|(.*))?/', $line, $matches)) {
+      $attributes[$matches[1]] = [
+        'label' => isset($matches[2]) ? $matches[2] : '',
+        'description' => isset($matches[3]) ? $matches[3] : '',
+      ];
+    }
+  }
+
+  return $attributes;
+}
+
+/**
+ * Transform an array of attributes into a string.
+ *
+ * @param array $attributes
+ *   The attributes to be converted.
+ * @return string
+ *   The attributes as string.
+ */
+function linked_field_attributes_split($attributes) {
+  $attributes_text = '';
+
+  // Iterate all attributes and build string.
+  foreach ($attributes as $attribute => $info) {
+    $attributes_text .= $attribute;
+
+    if ($info['label']) {
+      $attributes_text .= '|' . $info['label'];
+    }
+
+    if ($info['description']) {
+      $attributes_text .= '|' . $info['description'];
+    }
+
+    $attributes_text .= "\n";
+  }
+
+  return $attributes_text;
 }
