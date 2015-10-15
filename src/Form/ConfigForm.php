@@ -72,7 +72,9 @@ class ConfigForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     parent::submitForm($form, $form_state);
 
-    $config_text = $form_state->getValue('config');
+    // Fix empty config text.
+    $config_text = $form_state->getValue('config') ?: 'attributes:';
+
     $config = Yaml::decode($config_text);
 
     $this->config('linked_field.config')
