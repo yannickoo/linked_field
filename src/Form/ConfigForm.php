@@ -64,6 +64,12 @@ class ConfigForm extends ConfigFormBase {
       '#title' => $this->t('Example structure'),
     ];
 
+    $form['example']['description'] = [
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#markup' => $this->t('Each attribute has an optional label and description.')
+    ];
+
     $form['example']['code'] = [
       '#prefix' => '<pre>',
       '#suffix' => '</pre>',
