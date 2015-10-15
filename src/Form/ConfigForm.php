@@ -55,6 +55,21 @@ class ConfigForm extends ConfigFormBase {
       '#rows' => $rows,
     );
 
+    // Use module's YAML config file for example structure.
+    $module_path = \Drupal::moduleHandler()->getModule('linked_field')->getPath();
+    $yml_text = file_get_contents($module_path . '/config/install/linked_field.config.yml');
+
+    $form['example'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Example structure'),
+    ];
+
+    $form['example']['code'] = [
+      '#prefix' => '<pre>',
+      '#suffix' => '</pre>',
+      '#markup' => $yml_text,
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
