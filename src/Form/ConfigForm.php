@@ -53,7 +53,7 @@ class ConfigForm extends ConfigFormBase {
       '#description' => $this->t('Available attributes can be defined in YAML syntax.'),
       '#default_value' => $config_text,
       '#rows' => $rows,
-      '#attributes' => ['data-yaml-editor' => ['true']]
+      '#attributes' => ['data-yaml-editor' => ['true']],
     );
 
     // Use module's YAML config file for example structure.
