@@ -43,6 +43,14 @@ class ConfigForm extends ConfigFormBase {
     $conf = $config->get();
     $config_text = Yaml::encode($conf);
 
+    if (!\Drupal::moduleHandler()->moduleExists('yaml_editor')) {
+      $message = $this->t('It is recommended to install the <a href="@yaml-editor">YAML Editor</a> module for easier editing.', [
+        '@yaml-editor' => 'https://www.drupal.org/project/yaml_editor',
+      ]);
+
+      drupal_set_message($message, 'warning');
+    }
+
     // Each attribute needs 3 rows + "attributes:" row + 3 extra lines
     // for adding a new attribute.
     $rows = (count($config->get('attributes')) * 3) + 4;
