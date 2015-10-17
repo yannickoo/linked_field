@@ -165,7 +165,7 @@ function linked_field_entity_display_build_alter(&$build, $context) {
     $settings = isset($component['third_party_settings']['linked_field']) ? $component['third_party_settings']['linked_field'] : [];
 
     // Continue to next if no Linked Field settings were found.
-    if (!isset($settings)) {
+    if (!$settings) {
       continue;
     }
 
