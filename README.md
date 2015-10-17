@@ -12,3 +12,7 @@
    Select a token and click "Update".
 
 3. When you are missing some attributes edit them on the configuration page
+
+## Contributing
+
+Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://github.com/yannickoo/linked_field/issues/new).
