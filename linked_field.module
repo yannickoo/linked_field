@@ -102,9 +102,13 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
     ],
   ];
 
+  $destination = \Drupal::destination()->getAsArray();
+  $config_path = Url::fromRoute('linked_field.config', [], ['query' => $destination])->toString();
+
   $element['advanced'] = [
     '#type' => 'details',
     '#title' => t('Advanced'),
+    '#description' => t('Manage available attributes <a href="@config">here</a>.', ['@config' => $config_path]),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#states' => [
