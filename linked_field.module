@@ -13,6 +13,9 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Xss;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Field\FormatterInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Implements hook_field_formatter_settings_summary_alter().
@@ -77,19 +80,19 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
  * @param $form
  * @param \Drupal\Core\Form\FormStateInterface $form_state
  */
-function linked_field_field_formatter_third_party_settings_form(\Drupal\Core\Field\FormatterInterface $plugin, \Drupal\Core\Field\FieldDefinitionInterface $field_definition, $view_mode, $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+function linked_field_field_formatter_third_party_settings_form(FormatterInterface $plugin, FieldDefinitionInterface $field_definition, $view_mode, $form, FormStateInterface $form_state) {
   $available_attributes = \Drupal::config('linked_field.config')->get('attributes') ?: [];
   $settings = $plugin->getThirdPartySettings('linked_field');
 
   $element['linked'] = [
-    '#title' => t('Link this field'),
     '#type' => 'checkbox',
+    '#title' => t('Link this field'),
     '#default_value' => $settings['linked'],
   ];
 
   $element['destination'] = [
-    '#title' => t('Destination'),
     '#type' => 'textfield',
+    '#title' => t('Destination'),
     '#default_value' => $settings['destination'],
     '#description' => t('Here you can enter a token which will be used as link url.'),
     '#element_validate' => ['linked_field_element_validate_destination'],
@@ -101,8 +104,8 @@ function linked_field_field_formatter_third_party_settings_form(\Drupal\Core\Fie
   ];
 
   $element['advanced'] = [
-    '#title' => t('Advanced'),
     '#type' => 'details',
+    '#title' => t('Advanced'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#states' => [
@@ -130,8 +133,8 @@ function linked_field_field_formatter_third_party_settings_form(\Drupal\Core\Fie
   }
 
   $element['advanced']['text'] = [
-    '#title' => t('Text'),
     '#type' => 'textfield',
+    '#title' => t('Text'),
     '#default_value' => $settings['advanced']['text'],
     '#description' => t('Here you can enter a token which will be used as link text. Note that the actual field output will be overridden.'),
   ];
@@ -143,7 +146,7 @@ function linked_field_field_formatter_third_party_settings_form(\Drupal\Core\Fie
     '#dialog' => TRUE,
     '#states' => [
       'visible' => [
-        'input[name$="[settings][linked_field][linked]"]' => ['checked' => TRUE],
+        'input[name$="[third_party_settings][linked_field][linked]"]' => ['checked' => TRUE],
       ],
     ],
   ];
