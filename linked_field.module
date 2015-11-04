@@ -93,7 +93,7 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
     '#type' => 'textfield',
     '#title' => t('Destination'),
     '#default_value' => $settings['destination'],
-    '#description' => t('Here you can enter a token which will be used as link url.'),
+    '#description' => t('Here you can enter a token which will be used as link URL.'),
     '#element_validate' => ['linked_field_element_validate_destination'],
     '#states' => [
       'visible' => [
