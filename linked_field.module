@@ -9,13 +9,12 @@ use Drupal\Core\Url;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Field\FormatterInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Component\Utility\Xss;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Field\FormatterInterface;
-use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Implements hook_field_formatter_settings_summary_alter().
