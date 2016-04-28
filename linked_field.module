@@ -177,8 +177,8 @@ function linked_field_entity_display_build_alter(&$build, $context) {
 
     foreach (Element::children($element) as $delta) {
       // Normalize the settings.
-      $linked = $settings['linked'];
-      $destination = $settings['destination'];
+      $linked = empty($settings['linked']) ? false : $settings['linked'];
+      $destination = empty($settings['destination']) ? false : $settings['destination'];
 
       // If the destination field isn't filled for this field, we shouldn't
       // do anything. Continue to the next field.
