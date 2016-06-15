@@ -83,6 +83,16 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
   $available_attributes = \Drupal::config('linked_field.config')->get('attributes') ?: [];
   $settings = $plugin->getThirdPartySettings('linked_field');
 
+  if (!$settings) {
+    $settings = [
+      'linked' => 0,
+      'destination' => '',
+      'advanced' => [
+        'text' => '',
+      ],
+    ];
+  }
+
   $element['linked'] = [
     '#type' => 'checkbox',
     '#title' => t('Link this field'),
