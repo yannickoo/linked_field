@@ -143,10 +143,8 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
   ];
 
   $element['token'] = [
-    '#type' => 'container',
-    '#theme' => 'token_tree',
+    '#theme' => 'token_tree_link',
     '#token_types' => 'all',
-    '#dialog' => TRUE,
     '#states' => [
       'visible' => [
         'input[name$="[third_party_settings][linked_field][linked]"]' => ['checked' => TRUE],
