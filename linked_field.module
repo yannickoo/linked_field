@@ -242,8 +242,12 @@ function linked_field_entity_display_build_alter(&$build, $context) {
         continue;
       }
 
+      // If destination is a link we grab the href attribute.
+      preg_match('/<a href="(.+)">/', $destination, $match);
+      $filtered_url = isset($match[1]) ? $match[1] : $destination;
+
       // Parse the destination to get queries and fragments working.
-      $destination_parsed = UrlHelper::parse($destination);
+      $destination_parsed = UrlHelper::parse($filtered_url);
 
       // Generate a correct link.
       $path = Url::fromUri($destination_parsed['path'], $destination_parsed)->toString();
