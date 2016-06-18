@@ -101,8 +101,6 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
         return FALSE;
       }
 
-      xdebug_break();
-
       $uri = $this->getFieldValue($field_items);
     }
     elseif ($type == 'custom') {
