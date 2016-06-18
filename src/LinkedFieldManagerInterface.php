@@ -69,7 +69,7 @@ interface LinkedFieldManagerInterface {
    * @return false|string
    *   Either FALSE or the destination URL.
    */
-  public function buildDestination($destination);
+  public function buildDestinationUrl($destination);
 
   /**
    * Get the URI from field value.

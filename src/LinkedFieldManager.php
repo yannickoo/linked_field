@@ -62,6 +62,10 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
   public function getDestinationFields($entity_type_id, $bundle_id) {
     $field_names = [];
     $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions($entity_type_id, $bundle_id);
+    $label_field = \Drupal::service('entity_type.manager')->getDefinition($entity_type_id)->getKey('label');
+
+    // Remove the label field from fields.
+    unset($fields[$label_field]);
 
     foreach ($fields as $field_name => $field) {
       if (in_array($field->getType(), ['link', 'string', 'list_float', 'list_string'])) {
@@ -115,7 +119,7 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function buildDestination($destination) {
+  public function buildDestinationUrl($destination) {
     $destination_url = $this->pathValidator->getUrlIfValidWithoutAccessCheck($destination);
 
     if (!$destination_url) {
@@ -184,7 +188,7 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
             foreach ($attributes as $name => $value) {
               if ($value) {
                 // Convert all HTML entities back to their applicable characters.
-                $value = html_entity_decode($value, ENT_QUOTES);
+                $value = Html::decodeEntities($value);
                 $element->setAttribute($name, $value);
               }
             }
@@ -201,7 +205,7 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
           foreach ($attributes as $name => $value) {
             if ($value) {
               // Convert all HTML entities back to their applicable characters.
-              $value = html_entity_decode($value, ENT_QUOTES);
+              $value = Html::decodeEntities($value);
               $element->setAttribute($name, $value);
             }
           }
@@ -228,4 +232,5 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
     // Converting the DOMDocument object back to HTML code.
     return Html::serialize($html_dom);
   }
+
 }

@@ -21,8 +21,11 @@ use Drupal\Component\Utility\Unicode;
  * @param $context
  */
 function linked_field_field_formatter_settings_summary_alter(&$summary, $context) {
-  $available_attributes = \Drupal::config('linked_field.config')->get('attributes') ?: [];
+  /** @var \Drupal\linked_field\LinkedFieldManager $manager */
+  $manager = \Drupal::service('linked_field.manager');
+  $available_attributes = $manager->getAttributes();
   $settings = $context['formatter']->getThirdPartySettings('linked_field');
+  $summary_items = [];
 
   // Break when no linked field settings were found.
   if (!$settings) {
@@ -35,8 +38,20 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   $destination = $settings['destination'];
   $text = $settings['advanced']['text'];
 
-  $summary_items = [];
-  $summary_items[] = t('Destination: <code>@destination</code>', ['@destination' => $destination]);
+  // Dispay field name instead of machine-readable name.
+  if ($type == 'field') {
+    $entity_type = $context['field_definition']->getTargetEntityTypeId();
+    $bundle = $context['field_definition']->getTargetBundle();
+    $fields = $manager->getDestinationFields($entity_type, $bundle);
+
+    if (isset($fields[$destination])) {
+      $destination = $fields[$destination];
+    }
+  }
+
+  $summary_items[] = t('Destination: <code>@destination</code>', [
+    '@destination' => $destination,
+  ]);
 
   foreach ($available_attributes as $attribute => $info) {
     if (empty($settings['advanced'][$attribute])) {
@@ -144,12 +159,16 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
 
   $element['destination']['field'] = [
     '#type' => 'select',
-    '#title' => t('Select a field'),
+    '#title' => t('Field'),
     '#options' => $field_names,
+    '#empty_option' => t('- Select -'),
     '#default_value' => $settings['destination'],
     '#description' => t('The value of that field will be used as link destination.'),
     '#states' => [
       'visible' => [
+        'input[name$="[third_party_settings][linked_field][type]"]' => ['value' => 'field'],
+      ],
+      'required' => [
         'input[name$="[third_party_settings][linked_field][type]"]' => ['value' => 'field'],
       ],
     ],
@@ -162,6 +181,9 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
     '#description' => t('Enter a link destination, tokens are supported.'),
     '#states' => [
       'visible' => [
+        'input[name$="[third_party_settings][linked_field][type]"]' => ['value' => 'custom'],
+      ],
+      'required' => [
         'input[name$="[third_party_settings][linked_field][type]"]' => ['value' => 'custom'],
       ],
     ],
@@ -254,8 +276,6 @@ function linked_field_entity_display_build_alter(&$build, $context) {
 
     $replace_tokens = [$element['#entity_type'] => $element['#object']];
 
-    xdebug_break();
-
     foreach (Element::children($element) as $delta) {
       $destination = $manager->getDestination($destination_type, $destination, $context);
 
@@ -286,7 +306,7 @@ function linked_field_entity_display_build_alter(&$build, $context) {
         continue;
       }
 
-      $url = $manager->buildDestination($destination);
+      $url = $manager->buildDestinationUrl($destination);
       if (!$url) {
         continue;
       }
