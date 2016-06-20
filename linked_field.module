@@ -160,6 +160,11 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
   $element['destination'] = [
     '#type' => 'container',
     '#element_validate' => ['linked_field_element_validate_destination'],
+    '#states' => [
+      'visible' => [
+        'input[name$="[third_party_settings][linked_field][linked]"]' => ['checked' => TRUE],
+      ],
+    ],
   ];
 
   $element['destination']['field'] = [
