@@ -40,7 +40,8 @@ class ConfigForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('linked_field.config');
-    $conf = $config->get();
+    $attributes = $config->get('attributes');
+    $conf = ['attributes' => $attributes];
     $config_text = Yaml::encode($conf);
 
     if (!\Drupal::moduleHandler()->moduleExists('yaml_editor')) {
