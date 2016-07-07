@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\linked_field\Form\ConfigForm.
- */
-
 namespace Drupal\linked_field\Form;
 
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
