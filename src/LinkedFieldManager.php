@@ -50,6 +50,13 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function getFieldTypeBlacklist() {
+    return ['link'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getAttributes() {
     $attributes = $this->config->get('attributes') ?: [];
 

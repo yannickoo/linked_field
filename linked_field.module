@@ -104,6 +104,10 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
   $available_attributes = $manager->getAttributes();
   $settings = $plugin->getThirdPartySettings('linked_field');
 
+  if (in_array($field_definition->getType(), $manager->getFieldTypeBlacklist())) {
+    return;
+  }
+
   if (!$settings) {
     $settings = [
       'linked' => 0,

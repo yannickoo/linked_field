@@ -12,6 +12,14 @@ use Drupal\Core\Field\FieldItemListInterface;
 interface LinkedFieldManagerInterface {
 
   /**
+   * Get list of blacklisted field types.
+   *
+   * @return array
+   *   An array containing blacklisted field types.
+   */
+  public function getFieldTypeBlacklist();
+
+  /**
    * Get configured attributes from configuration.
    *
    * @return array
