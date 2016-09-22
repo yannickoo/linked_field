@@ -255,7 +255,47 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
     ];
   }
 
+  // Make sure empty Linked Field configuration is not stored.
+  $element['#element_validate'][] = 'linked_field_element_validate';
+
   return $element;
+}
+
+/**
+ * Element validate function for Linked Field.
+ *
+ * @param array $element
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ */
+function linked_field_element_validate($element, FormStateInterface $form_state) {
+  $parents = $form_state->getTriggeringElement()['#parents'];
+  $parents = array_slice($parents, 0, 3);
+  $settings = \Drupal\Component\Utility\NestedArray::getValue(
+    $form_state->getValues(),
+    $parents
+  );
+
+  if (!isset($settings['third_party_settings']['linked_field'])) {
+    return;
+  }
+
+  $linked_field = &$settings['third_party_settings']['linked_field'];
+
+  // Remove empty Linked Field configuration form 3rd party settings.
+  if (empty($linked_field['linked'])) {
+    unset($settings['third_party_settings']['linked_field']);
+  }
+  else {
+    // Remove empty attributes from configuration.
+    foreach ($linked_field['advanced'] as $attribute => $value) {
+      if (!Unicode::strlen(trim($value))) {
+        unset($linked_field['advanced'][$attribute]);
+      }
+    }
+  }
+
+  // Set adjusted settings back into form state.
+  $form_state->setValue($parents, $settings);
 }
 
 /**
