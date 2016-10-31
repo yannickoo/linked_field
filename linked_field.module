@@ -328,7 +328,11 @@ function linked_field_entity_display_build_alter(&$build, $context) {
       continue;
     }
 
-    $replace_tokens = [$element['#entity_type'] => $element['#object']];
+    if (isset($element['#entity_type']) && isset($element['#object'])) {
+      $replace_tokens = [$element['#entity_type'] => $element['#object']];
+    } else {
+      $replace_tokens = [];
+    }
 
     foreach (Element::children($element) as $delta) {
       $destination = $manager->getDestination($destination_type, $destination, $context);
@@ -352,8 +356,10 @@ function linked_field_entity_display_build_alter(&$build, $context) {
 
       // Would be better to have own set with allowed tags so that only
       // inline elements are allowed.
-      $text = $settings['advanced']['text'];
-      $text = $text ? Xss::filterAdmin($manager->replaceToken($text, $replace_tokens, ['clear' => TRUE])) : '';
+      $text = '';
+      if (isset($settings['advanced']['text'])) {
+        $text = Xss::filterAdmin($manager->replaceToken($settings['advanced']['text'], $replace_tokens, ['clear' => TRUE]));
+      }
 
       // Continue to next field if destination is empty.
       if (!$destination) {
