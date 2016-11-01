@@ -36,7 +36,7 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
   $linked = $settings['linked'];
   $type = !isset($settings['type']) ? 'custom' : $settings['type'];
   $destination = $settings['destination'];
-  $text = $settings['advanced']['text'];
+  $text = isset($settings['advanced']['text']) ? $settings['advanced']['text'] : '';
 
   if (!$linked) {
     return;
@@ -239,7 +239,7 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
   $element['advanced']['text'] = [
     '#type' => 'textfield',
     '#title' => t('Text'),
-    '#default_value' => $settings['advanced']['text'],
+    '#default_value' => isset($settings['advanced']['text']) ? $settings['advanced']['text'] : '',
     '#description' => t('Here you can enter a token which will be used as link text. Note that the actual field output will be overridden.'),
   ];
 
