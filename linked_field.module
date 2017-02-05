@@ -416,11 +416,16 @@ function linked_field_element_validate_destination($element, FormStateInterface 
         $field['destination'] = $field['destination'][$type];
 
         if ($type == 'custom') {
-          try {
-            Url::fromUri($field['destination']);
-          } catch (\Exception $e) {
-            $form_state->setError($element, t('Destination is invalid.'));
-            return;
+          $destination = $field['destination'];
+
+          // Prevent validating URL with tokens.
+          if (strpos($destination, '[') === FALSE || strpos($destination, ']') === FALSE) {
+            try {
+              Url::fromUri($destination);
+            } catch (\Exception $e) {
+              $form_state->setError($element, t('Destination is invalid.'));
+              return;
+            }
           }
         }
 
