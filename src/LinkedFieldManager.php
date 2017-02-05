@@ -127,20 +127,23 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
    * {@inheritdoc}
    */
   public function buildDestinationUrl($destination) {
-    $destination_url = $this->pathValidator->getUrlIfValidWithoutAccessCheck($destination);
+    $parsed_url = parse_url($destination);
 
-    if (!$destination_url) {
-      return FALSE;
+    // Try to fix internal URLs by prefixing them with "internal:/".
+    if (!$parsed_url['scheme']) {
+      // Let's support "/node/1" and "node/1" here.
+      $slash = $destination[0] == '/' ? '' : '/';
+      $destination = 'internal:' . $slash . $destination;
     }
 
-    $destination = $destination_url->setAbsolute()->toString();
+    try {
+      $url = Url::fromUri($destination);
+      $destination_url = $url->setAbsolute()->toString();
 
-    // Parse the destination to get queries and fragments working.
-    $destination_parsed = UrlHelper::parse($destination);
-    // Generate a correct link.
-    $url = Url::fromUri($destination_parsed['path'], $destination_parsed)->toString();
-
-    return $url;
+      return $destination_url;
+    } catch (\Exception $e) {
+      return FALSE;
+    }
   }
 
   /**

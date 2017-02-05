@@ -192,7 +192,7 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
     '#type' => 'textfield',
     '#title' => t('Destination'),
     '#default_value' => $settings['destination']['custom'],
-    '#description' => t('Enter a link destination, tokens are supported.'),
+    '#description' => t('Tokens are supported. Internal path must be prefixed with a <code>internal:/</code>.'),
     '#states' => [
       'visible' => [
         'input[name$="[third_party_settings][linked_field][type]"]' => ['value' => 'custom'],
@@ -414,6 +414,15 @@ function linked_field_element_validate_destination($element, FormStateInterface 
         $field = &$fields[$field_name]['settings_edit_form']['third_party_settings']['linked_field'];
 
         $field['destination'] = $field['destination'][$type];
+
+        if ($type == 'custom') {
+          try {
+            Url::fromUri($field['destination']);
+          } catch (\Exception $e) {
+            $form_state->setError($element, t('Destination is invalid.'));
+            return;
+          }
+        }
 
         $form_state->setValue('fields', $fields);
       }
