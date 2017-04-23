@@ -376,7 +376,14 @@ function linked_field_entity_display_build_alter(&$build, $context) {
 
       // Render the field if no custom text was set in the configuration.
       if (!$text) {
-        $rendered = \Drupal::service('renderer')->render($element[$delta]);
+        $renderer = \Drupal::service('renderer');
+
+        if ($renderer->hasRenderContext()) {
+          $rendered = $renderer->render($element[$delta]);
+        }
+        else {
+          $rendered = $renderer->renderRoot($element[$delta]);
+        }
       }
       else {
         $rendered = $text;
