@@ -130,7 +130,7 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
     $parsed_url = parse_url($destination);
 
     // Try to fix internal URLs by prefixing them with "internal:/".
-    if (!$parsed_url['scheme']) {
+    if (!isset($parsed_url['scheme'])) {
       // Let's support "/node/1" and "node/1" here.
       $slash = $destination[0] == '/' ? '' : '/';
       $destination = 'internal:' . $slash . $destination;
