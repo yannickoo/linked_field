@@ -6,12 +6,8 @@
  */
 
 /**
- * Update module weight to run at last.
+ * Implements hook_install().
  */
-function linked_field_update_8001(&$sandbox) {
-  // We have to change the weight so we run at last.
-  db_update('system')
-    ->fields(array('weight' => '100'))
-    ->condition('name', 'linked_field')
-    ->execute();
+function linked_field_install() {
+  module_set_weight('linked_field', 100);
 }
