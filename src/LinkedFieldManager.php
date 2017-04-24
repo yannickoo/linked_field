@@ -197,7 +197,8 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
             // Adding the attributes.
             foreach ($attributes as $name => $value) {
               if ($value) {
-                // Convert all HTML entities back to their applicable characters.
+                // Convert all HTML entities back to
+                // their applicable characters.
                 $value = Html::decodeEntities($value);
                 $element->setAttribute($name, $value);
               }

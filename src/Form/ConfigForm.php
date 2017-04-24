@@ -19,7 +19,7 @@ class ConfigForm extends ConfigFormBase {
    */
   protected function getEditableConfigNames() {
     return [
-      'linked_field.config'
+      'linked_field.config',
     ];
   }
 
@@ -72,7 +72,7 @@ class ConfigForm extends ConfigFormBase {
     $form['example']['description'] = [
       '#prefix' => '<p>',
       '#suffix' => '</p>',
-      '#markup' => $this->t('Each attribute has an optional label and description.')
+      '#markup' => $this->t('Each attribute has an optional label and description.'),
     ];
 
     $form['example']['code'] = [

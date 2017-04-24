@@ -6,7 +6,8 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 
 /**
- * Interface LinkedFieldManagerInterface
+ * Interface LinkedFieldManagerInterface.
+ *
  * @package Drupal\linked_field
  */
 interface LinkedFieldManagerInterface {
@@ -125,4 +126,5 @@ interface LinkedFieldManagerInterface {
    * @return string
    */
   public function linkHtml($html, $attributes);
+
 }
