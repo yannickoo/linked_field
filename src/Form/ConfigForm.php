@@ -51,14 +51,14 @@ class ConfigForm extends ConfigFormBase {
     // for adding a new attribute.
     $rows = (count($config->get('attributes')) * 3) + 4;
 
-    $form['config'] = array(
+    $form['config'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Configuration'),
       '#description' => $this->t('Available attributes can be defined in YAML syntax.'),
       '#default_value' => $config_text,
       '#rows' => $rows,
       '#attributes' => ['data-yaml-editor' => 'true'],
-    );
+    ];
 
     // Use module's YAML config file for example structure.
     $module_path = \Drupal::moduleHandler()->getModule('linked_field')->getPath();
