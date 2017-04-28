@@ -5,6 +5,7 @@ namespace Drupal\linked_field;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -90,6 +91,20 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
     $settings = [];
     $entity_display = EntityViewDisplay::collectRenderDisplay($entity, $view_mode);
     $component = $entity_display->getComponent($field_name);
+
+    if (isset($component['third_party_settings']['linked_field'])) {
+      $settings = $component['third_party_settings']['linked_field'];
+    }
+
+    return $settings;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldDisplaySettings(EntityViewDisplayInterface $display, $field_name) {
+    $settings = [];
+    $component = $display->getComponent($field_name);
 
     if (isset($component['third_party_settings']['linked_field'])) {
       $settings = $component['third_party_settings']['linked_field'];

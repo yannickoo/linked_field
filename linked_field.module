@@ -310,7 +310,7 @@ function linked_field_entity_display_build_alter(&$build, $context) {
 
   foreach (Element::children($build) as $field_name) {
     $element = &$build[$field_name];
-    $settings = $manager->getDisplaySettings($context['entity'], $context['view_mode'], $field_name);
+    $settings = $manager->getFieldDisplaySettings($context['display'], $field_name);
 
     // Continue to next if no Linked Field settings were found.
     if (!count($settings)) {
