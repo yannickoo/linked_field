@@ -82,7 +82,7 @@ function linked_field_field_list() {
         );
       }
 
-      // Add a new fieldst per entity type.
+      // Add a new fieldset per entity type.
       $fieldsets[] = array(
         '#type' => 'fieldset',
         '#title' => $entity_type_label,
