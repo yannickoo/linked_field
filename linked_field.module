@@ -139,10 +139,17 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
   ];
 
   // The target bundle is sometimes null so we grab it from form instead.
-  $target_bundle = $field_definition->getTargetBundle();
-  $bundle = $target_bundle ? $target_bundle : $form['#bundle'];
-  $field_names = $manager->getDestinationFields($field_definition->getTargetEntityTypeId(), $bundle);
-  $fields_available = count($field_names);
+  $bundle = $field_definition->getTargetBundle();
+  if (!$bundle) {
+    $bundle = isset($form['#bundle']) ? $form['#bundle'] : NULL;
+  }
+
+  $field_names = [];
+  $fields_available = NULL;
+  if ($bundle) {
+    $field_names = $manager->getDestinationFields($field_definition->getTargetEntityTypeId(), $bundle);
+    $fields_available = count($field_names);
+  }
 
   // Switch to 'custom' mode if no fields are available.
   if (!$fields_available) {
