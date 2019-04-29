@@ -272,6 +272,7 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
 
   if (\Drupal::moduleHandler()->moduleExists('token')) {
     $element['token'] = [
+      '#type' => 'item',
       '#theme' => 'token_tree_link',
       '#token_types' => 'all',
       '#states' => [
