@@ -13,6 +13,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Component\Utility\Xss;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Component\Utility\NestedArray;
 
 /**
  * Implements hook_field_formatter_settings_summary_alter().
@@ -298,12 +299,9 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
 function linked_field_element_validate($element, FormStateInterface $form_state) {
   $parents = $form_state->getTriggeringElement()['#parents'];
   $parents = array_slice($parents, 0, 3);
-  $settings = \Drupal\Component\Utility\NestedArray::getValue(
-    $form_state->getValues(),
-    $parents
-  );
+  $settings = NestedArray::getValue($form_state->getValues(), $parents);
 
-  if (!isset($settings['third_party_settings']['linked_field'])) {
+  if (!is_array($settings) || !isset($settings['third_party_settings']['linked_field'])) {
     return;
   }
 
