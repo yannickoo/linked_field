@@ -318,7 +318,7 @@ function linked_field_element_validate($element, FormStateInterface $form_state)
   else {
     // Remove empty attributes from configuration.
     foreach ($linked_field['advanced'] as $attribute => $value) {
-      if (!Unicode::strlen(trim($value))) {
+      if (!mb_strlen(trim($value))) {
         unset($linked_field['advanced'][$attribute]);
       }
     }
