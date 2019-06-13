@@ -109,16 +109,14 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
     return;
   }
 
-  if (!$settings) {
-    $settings = [
-      'linked' => 0,
-      'type' => 'field',
-      'destination' => '',
-      'advanced' => [
-        'text' => '',
-      ],
-    ];
-  }
+  $settings = NestedArray::mergeDeep([
+    'linked' => 0,
+    'type' => 'field',
+    'destination' => '',
+    'advanced' => [
+      'text' => '',
+    ],
+  ], $settings);
 
   if (!isset($settings['type'])) {
     $settings['type'] = 'custom';
