@@ -3,7 +3,6 @@
 namespace Drupal\linked_field;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
@@ -76,7 +75,12 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
     unset($fields[$label_field]);
 
     foreach ($fields as $field_name => $field) {
-      if (in_array($field->getType(), ['link', 'string', 'list_float', 'list_string'])) {
+      if (in_array($field->getType(),
+        [
+          'link', 'string',
+          'list_float',
+          'list_string',
+        ])) {
         $field_names[$field_name] = $field->getLabel() . ' (' . $field_name . ')';
       }
     }
@@ -120,7 +124,7 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
     $uri = '';
 
     if ($type == 'field') {
-      /** @var FieldItemListInterface $field_items */
+      /** @var \Drupal\Core\Field\FieldItemListInterface $field_items */
       $field_items = $context['entity']->get($value);
 
       if (!$field_items->count()) {
@@ -156,7 +160,8 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
       $destination_url = $url->setAbsolute()->toString();
 
       return $destination_url;
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       return FALSE;
     }
   }

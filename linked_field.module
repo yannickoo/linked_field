@@ -5,6 +5,7 @@
  * Main file of Linked Field module.
  */
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Url;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Form\FormStateInterface;
@@ -18,10 +19,12 @@ use Drupal\Component\Utility\NestedArray;
 /**
  * Implements hook_field_formatter_settings_summary_alter().
  *
- * @param $summary
- * @param $context
+ * @param array $summary
+ *   An array of summary messages.
+ * @param array $context
+ *   An associative array.
  */
-function linked_field_field_formatter_settings_summary_alter(&$summary, $context) {
+function linked_field_field_formatter_settings_summary_alter(array &$summary, array $context) {
   /** @var \Drupal\linked_field\LinkedFieldManager $manager */
   $manager = \Drupal::service('linked_field.manager');
   $available_attributes = $manager->getAttributes();
@@ -94,12 +97,17 @@ function linked_field_field_formatter_settings_summary_alter(&$summary, $context
  * Implements hook_field_formatter_third_party_settings_form().
  *
  * @param \Drupal\Core\Field\FormatterInterface $plugin
+ *   The instantiated field formatter plugin.
  * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
- * @param $view_mode
- * @param $form
+ *   The field definition.
+ * @param string $view_mode
+ *   The entity view mode.
+ * @param array $form
+ *   The (entire) configuration form array.
  * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
  */
-function linked_field_field_formatter_third_party_settings_form(FormatterInterface $plugin, FieldDefinitionInterface $field_definition, $view_mode, $form, FormStateInterface $form_state) {
+function linked_field_field_formatter_third_party_settings_form(FormatterInterface $plugin, FieldDefinitionInterface $field_definition, $view_mode, array $form, FormStateInterface $form_state) {
   /** @var \Drupal\linked_field\LinkedFieldManager $manager */
   $manager = \Drupal::service('linked_field.manager');
   $available_attributes = $manager->getAttributes();
@@ -299,7 +307,9 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
  * Element validate function for Linked Field.
  *
  * @param array $element
+ *   The structured array whose children shall be rendered.
  * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
  */
 function linked_field_element_validate($element, FormStateInterface $form_state) {
   $parents = array_slice($element['linked']['#parents'], 0, 3);
@@ -331,10 +341,12 @@ function linked_field_element_validate($element, FormStateInterface $form_state)
 /**
  * Implements hook_entity_display_build_alter().
  *
- * @param $build
- * @param $context
+ * @param array $build
+ *   A render array.
+ * @param array $context
+ *   An associative array.
  */
-function linked_field_entity_display_build_alter(&$build, $context) {
+function linked_field_entity_display_build_alter(array &$build, array $context) {
   /** @var \Drupal\linked_field\LinkedFieldManager $manager */
   $manager = \Drupal::service('linked_field.manager');
 
@@ -360,7 +372,8 @@ function linked_field_entity_display_build_alter(&$build, $context) {
 
     if (isset($element['#entity_type']) && isset($element['#object'])) {
       $replace_tokens = [$element['#entity_type'] => $element['#object']];
-    } else {
+    }
+    else {
       $replace_tokens = [];
     }
 
@@ -429,10 +442,12 @@ function linked_field_entity_display_build_alter(&$build, $context) {
 /**
  * Form element validation handler for destination field in settings form.
  *
- * @param $element
+ * @param array $element
+ *   The structured array whose children shall be rendered.
  * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
  */
-function linked_field_element_validate_destination($element, FormStateInterface &$form_state) {
+function linked_field_element_validate_destination(array $element, FormStateInterface &$form_state) {
   $fields = $form_state->getValue('fields');
   // We check whether 'fields' exists in the form_state values.
   if ($fields) {
@@ -459,7 +474,8 @@ function linked_field_element_validate_destination($element, FormStateInterface 
           if (strpos($destination, '[') === FALSE || strpos($destination, ']') === FALSE) {
             try {
               Url::fromUri($destination);
-            } catch (\Exception $e) {
+            }
+            catch (\Exception $e) {
               $form_state->setError($element, t('Destination is invalid.'));
               return;
             }
