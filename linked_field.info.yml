@@ -3,3 +3,4 @@ type: module
 description: 'Adds the functionality to link fields to a specific destination.'
 core: 8.x
 configure: linked_field.config
+core_version_requirement: ^8 || ^9
