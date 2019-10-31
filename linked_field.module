@@ -224,6 +224,7 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
         'input[name$="[third_party_settings][linked_field][type]"]' => ['value' => 'field'],
       ],
       'required' => [
+        'input[name$="[third_party_settings][linked_field][linked]"]' => ['checked' => TRUE],
         'input[name$="[third_party_settings][linked_field][type]"]' => ['value' => 'field'],
       ],
     ],
@@ -239,6 +240,7 @@ function linked_field_field_formatter_third_party_settings_form(FormatterInterfa
         'input[name$="[third_party_settings][linked_field][type]"]' => ['value' => 'custom'],
       ],
       'required' => [
+        'input[name$="[third_party_settings][linked_field][linked]"]' => ['checked' => TRUE],
         'input[name$="[third_party_settings][linked_field][type]"]' => ['value' => 'custom'],
       ],
     ],
