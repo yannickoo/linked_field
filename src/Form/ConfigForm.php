@@ -4,8 +4,11 @@ namespace Drupal\linked_field\Form;
 
 use Drupal\Component\Serialization\Exception\InvalidDataTypeException;
 use Drupal\Component\Serialization\Yaml;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class ConfigForm.
@@ -13,6 +16,36 @@ use Drupal\Core\Form\FormStateInterface;
  * @package Drupal\linked_field\Form
  */
 class ConfigForm extends ConfigFormBase {
+
+  /**
+   * Module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * Constructs an ConfigForm object.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The factory for configuration objects.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler) {
+    parent::__construct($config_factory);
+    $this->moduleHandler = $module_handler;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('module_handler')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -39,7 +72,7 @@ class ConfigForm extends ConfigFormBase {
     $conf = ['attributes' => $attributes];
     $config_text = Yaml::encode($conf);
 
-    if (!\Drupal::moduleHandler()->moduleExists('yaml_editor')) {
+    if (!$this->moduleHandler->moduleExists('yaml_editor')) {
       $message = $this->t('It is recommended to install the <a href="@yaml-editor">YAML Editor</a> module for easier editing.', [
         '@yaml-editor' => 'https://www.drupal.org/project/yaml_editor',
       ]);
@@ -61,7 +94,7 @@ class ConfigForm extends ConfigFormBase {
     ];
 
     // Use module's YAML config file for example structure.
-    $module_path = \Drupal::moduleHandler()->getModule('linked_field')->getPath();
+    $module_path = $this->moduleHandler->getModule('linked_field')->getPath();
     $yml_text = file_get_contents($module_path . '/config/install/linked_field.config.yml');
 
     $form['example'] = [

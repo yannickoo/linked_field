@@ -6,7 +6,9 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Path\PathValidatorInterface;
 use Drupal\Core\Url;
@@ -39,12 +41,28 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
   protected $token;
 
   /**
+   * Entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManager
+   */
+  protected $entityFieldManager;
+
+  /**
+   * Entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManager
+   */
+  protected $entityTypeManager;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, PathValidatorInterface $path_validator, Token $token) {
+  public function __construct(ConfigFactoryInterface $config_factory, PathValidatorInterface $path_validator, Token $token, EntityFieldManager $entityFieldManager, EntityTypeManager $entityTypeManager) {
     $this->config = $config_factory->get('linked_field.config');
     $this->pathValidator = $path_validator;
     $this->token = $token;
+    $this->entityFieldManager = $entityFieldManager;
+    $this->entityTypeManager = $entityTypeManager;
   }
 
   /**
@@ -68,8 +86,8 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
    */
   public function getDestinationFields($entity_type_id, $bundle_id) {
     $field_names = [];
-    $fields = \Drupal::service('entity_field.manager')->getFieldDefinitions($entity_type_id, $bundle_id);
-    $label_field = \Drupal::service('entity_type.manager')->getDefinition($entity_type_id)->getKey('label');
+    $fields = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle_id);
+    $label_field = $this->entityTypeManager->getDefinition($entity_type_id)->getKey('label');
 
     // Remove the label field from fields.
     unset($fields[$label_field]);
