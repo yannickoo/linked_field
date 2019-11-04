@@ -5,7 +5,6 @@
  * Main file of Linked Field module.
  */
 
-use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Url;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Form\FormStateInterface;
