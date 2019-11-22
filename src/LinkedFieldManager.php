@@ -6,9 +6,9 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
-use Drupal\Core\Entity\EntityFieldManager;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Path\PathValidatorInterface;
 use Drupal\Core\Url;
@@ -57,7 +57,7 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, PathValidatorInterface $path_validator, Token $token, EntityFieldManager $entityFieldManager, EntityTypeManager $entityTypeManager) {
+  public function __construct(ConfigFactoryInterface $config_factory, PathValidatorInterface $path_validator, Token $token, EntityFieldManagerInterface $entityFieldManager, EntityTypeManagerInterface $entityTypeManager) {
     $this->config = $config_factory->get('linked_field.config');
     $this->pathValidator = $path_validator;
     $this->token = $token;
