@@ -138,7 +138,7 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDestination($type, $value, $context) {
+  public function getDestination($type, $value, array $context) {
     $uri = '';
 
     if ($type == 'field') {
