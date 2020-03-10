@@ -208,7 +208,7 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function replaceToken($text, $data = [], $options = []) {
+  public function replaceToken($text, array $data = [], array $options = []) {
     return $this->token->replace($text, $data, $options);
   }
 
@@ -269,7 +269,7 @@ class LinkedFieldManager implements LinkedFieldManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function linkHtml($html, $attributes) {
+  public function linkHtml($html, array $attributes) {
     // Convert HTML code to a DOMDocument object.
     $html_dom = Html::load($html);
     $body = $html_dom->getElementsByTagName('body');
