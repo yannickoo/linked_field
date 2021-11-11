@@ -1,3 +1,6 @@
+#### :warning: The repository has been moved to [drupal.org](https://www.drupal.org/project/linked_field) / Issues can be created [here](https://www.drupal.org/node/add/project-issue/linked_field) :warning:
+
+---
 # Linked Field
 
 > Allows you to link fields to a specific destination.
@@ -15,4 +18,4 @@
 
 ## Contributing
 
-Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://github.com/yannickoo/linked_field/issues/new).
+Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://www.drupal.org/node/add/project-issue/linked_field).
